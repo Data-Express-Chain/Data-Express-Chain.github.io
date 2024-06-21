@@ -26,5 +26,4 @@ Nowadays, it is difficult for individual users to effectively ensure the authent
 | Failure Page | The url page redirected to after a failed data acquisition, provided by System Integrator |
 | Original-File| The original data file acquired directly from data source |
 | Original-File-Parse | Parsing the Original-File from data source into readable json format |
-| Evidence Certificate | The data repository pdf file marking the existence of a data acquisition trial |
 | Admin Console | The administration web console to manage DECS settings, used by System Provider |
