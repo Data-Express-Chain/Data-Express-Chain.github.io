@@ -638,7 +638,7 @@ FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 ### 3.5 接入方拉取取证文件接口
 
 通过这个接口，从我方后台拉取本次取证用户在清洁环境下载的文件。  
-注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果、存管证书），请及时拉取文件落库。
+注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。
 
 * 下载地址失效时间为5分钟
 * 接口调用方式：  
@@ -742,7 +742,7 @@ public String decryptAes(String base64EncryptedValue, SecretKey key) throws Exce
 
 清洁环境后台云存储服务配置使用了文件存储服务端加密，则接口返回的fileKey字段不为空，需用上面方法解密为一个base64的key，和解密后的fileUrl一起使用下面的代码下载文件，和普通文件下载的区别是header多设置了3个文件下载解密的参数。
 
-注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果、存管证书），请及时拉取文件落库。
+注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。
 
 ```java
 @Test
@@ -974,12 +974,12 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |data.daId|String|取证ID|Y|
 |data.bizNo|String|接入方流水号|Y|
 |data.jsonResult|Int|文件解析状态|Y|
-|data.certResult|Int|证书状态|Y|
 |data.appId|String|接入方的appId|Y|
 |data.authorizedTs|Long|用户的完成授权的时间戳，单位是毫秒，值为 0 表示未授权。未授权的用户，接入方是不会拉取到用户的文件的。因此，可以判断authorizedTs > 0，确认状态无误即可下载。|Y|
 |data.ext|对象|    |N|
 |data.ext.daSubStatus|Int|子结束码。如果用户访问取数失败，具体的出错原因，其枚举值见[9. daSubStatus枚举表格](/zh/access/appendix?id=_9-dasubstatus枚举表格) <br>非必有，如果接入方需要配置此功能，请告知。|N|
 |data.ext.childDaList|对象|非必有，如果接入方要求配置此功能，请告知。<br>展示子site的每一笔订单的详情，详见下述实例。|N|
+<!-- |data.certResult|Int|存管证书状态|Y| -->
 
 * 特殊错误码  
 
@@ -1176,12 +1176,12 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |da_status|取证状态码|
 |da_sub_status|取证子状态码|
 |json_result|文件解析的状态（取值见下）|
-|cert_result|证书的状态（取值见下）|
 |authorize_time|授权时间戳，>0L代表有值|
 |charge_flag|Y代表计费，N代表不计费|
 |charge_package|Y代表使用流量包内条数计费，N代表不使用流量包内条数计费|
 |user_protocol_upload_flag|Y代表已上传用户协议，N代表未上传|
 |create_time|取证订单创建时间|
+<!-- |cert_result|证书的状态（取值见下）| -->
 <!-- |original_site|取证的原数据类型，仅在丰巢模式切换到邮箱模式时会有值| -->
 
 
@@ -1198,7 +1198,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 * 通过这个接口，从后台拉取本次取证的结果（成功或者失败），及文件的解析后的结构化数据下载地址（如有）  
 * 下载地址失效时间为5分钟  
 * **接入方需要使用3.5.1、3.5.2相同的方式下载解析结果并解密**  
-注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果、存管证书），请及时拉取文件落库。  
+注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。  
 
 * 接口调用方式：  
 
@@ -1244,7 +1244,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |:----|:----|:----|:----|
 |0|    |成功|终态|
 |-44009<br>-43024|NO_DB_RECORD_EXCEPTION|daId不存在|非终态，需要重试|
-|-44028|DA_NOT_AUTHORIZED_EXCEPTION|用户未授权，所以接入方不能拉取用户的取证文件和存管证书|非终态，需要重试|
+|-44028|DA_NOT_AUTHORIZED_EXCEPTION|用户未授权，所以接入方不能拉取用户的取证文件等文件|非终态，需要重试|
 |-44017|NOT_RECEIVED_USER_PROTOCOL_EXCEPTION|没有收到用户协议|非终态，需要重试|
 |-44001|FILE_PARSE_EXCEPTION|数据解析失败|非终态，需重试，重试时间范围7天内|
 |-44062|DA_IN_PROGRESS_EXCEPTION|取证还在过程中；若此时daStatus=10，则为解析尚未完成|非终态，需要重试|
@@ -1297,7 +1297,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 1. **接口调用成功返回的url有效期为5分钟，所以需要在5分钟内完成文件下载，如果过期可再次调用此接口返回新的url。**  
 2. **解析可能会因为原数据类型的用户文件格式改版或者出现新的未覆盖的格式用例导致解析失败，而暂时获取不到jsonFileUrl。我方会做解析的重新适配处理并在14天内发版解决，所以接入方需考虑此异常场景并支持在14天内的兜底重试拉取。**  
 
-注：为了确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果、保存证书），请及时拉取文件并落库；超过10天的文件需要清洁环境后端服务方定期批量处理。  
+注：为了确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等文件），请及时拉取文件并落库；超过10天的文件需要清洁环境后端服务方定期批量处理。  
 
 <!-- 
 ### 3.12 拉取微信外H5跳转小程序URL接口（只对特定accessway开放）
@@ -1628,11 +1628,12 @@ https://testing-vdi.<服务方域名>.com/vdi/vdi.html?sessionId=de1tuknz1500809
 ## 4 通知（v2格式）接入方的接口说明
 
 
-用户取证、存管证书的生成是异步流程，由清洁环境后端服务进行处理之后使用通知方式，调用接入方预先配置给清洁环境后端的接口（单一接口），来异步通知接入方业务进度。
+用户取证是异步流程，由清洁环境后端服务进行处理之后使用通知方式，调用接入方预先配置给清洁环境后端的接口（单一接口），来异步通知接入方业务进度。
 
 注：v2格式的通知目前在试运行状态，如有需求可联系您的对接产品经理。v2通知和原版通知的区别在于：
 
-* func含四个字段（之前版本仅2个）：取证失败、取证完成且授权成功、解析成功、存管证书生成成功。
+<!-- * func含四个字段（之前版本仅2个）：取证失败、取证完成且授权成功、解析成功、存管证书生成成功。 -->
+* func含几个字段（之前版本仅2个）：取证失败、取证完成且授权成功、解析成功。
 * 通知直接包含结果文件下载地址。
 * 接入方在收到通知之后，必须立即返回errorCode为0，否则通知会不断重试。接入方仍然可以使用3.8接口主动拉取作为兜底。
 
@@ -1640,7 +1641,7 @@ https://testing-vdi.<服务方域名>.com/vdi/vdi.html?sessionId=de1tuknz1500809
 
 * 取证终态失败的通知（必选）：**daFailed**，立即发出
 * 取证原文通知/授权完成通知（必选）：**daUserAuthorized**，用户取证成功点击同意提交按钮后，且用户协议上传成功，会发送带有**取证原文件**下载地址的文件通知。若为异步下载的数据类型（如N合一），需要等待下载完成，可能会于前端同意提交后时延30s左右发出；否则立即发出。
-* 存管证书通知（可选）：**daCertGenerated**，存管证书生成完成后，且用户协议和授权完成，会发送带有**存管证书**下载地址的文件通知，一般时延为发出daUserAuthorized之后5~10min
+<!-- * 存管证书通知（可选）：**daCertGenerated**，存管证书生成完成后，且用户协议和授权完成，会发送带有**存管证书**下载地址的文件通知，一般时延为发出daUserAuthorized之后5~10min -->
 * 解析文件通知（不再提供）：**daFileParsed**，如果不是本地化解析部署，且用户协议和授权完成，则**解析完成后**会发送**带有解析结果json文件**下载地址的通知，一般时延为发出daUserAuthorized之后5~10s。**自2024年开始，本通知仅对特定客户开放，新接入方需要使用本地部署解析代码对下载的原文进行解析。**
 <!-- * index页提交完成通知（index页提交时专用，一般情况下用不到）: **daSubmittedApp**在取数平台小程序页面点击"提交数据"时的通知 -->
 
@@ -1690,7 +1691,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 
 |参数|类型|说明|字段是否<br>必定存在|长度<br>限制|
 |:----|:----|:----|:----|:----|
-|func|String|通知类型。<br>取证终态失败的通知：daFailed<br>取证原文通知：daUserAuthorized<br>存管证书生成通知：daCertGenerated<br>解析文件生成通知：daFileParsed<br>index页提交数据通知：daSubmittedApp|Y|    |
+|func|String|通知类型。<br>取证终态失败的通知：daFailed<br>取证原文通知：daUserAuthorized<br>解析文件生成通知：daFileParsed<br>index页提交数据通知：daSubmittedApp|Y|    |
 |v|String|版本号，2.0.0|Y|    |
 |auth|对象|    |Y|    |
 |auth.nonce|String|随机数，32位随机串（字母+数字组成的随机数）|Y|32个字符|
@@ -1699,11 +1700,10 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 |data.daId|String|取证ID|Y|    |
 |data.bizNo|String|接入方流水号（如果是从清洁环境直接进入的场景，这个字段为空字符串，如fullminiapp独立小程序方式）|Y|128个字符|
 |data.site|String|用户访问的数据类型：[site的可能取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)|Y|32个字符|
-|**data.daStatus**|Int|用户取证状态值：[daStatus 可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|N (非存管证书时)|    |
-|**data**.**fileUrlList**|数组|下载的文件的url，是一个数组，表明可能有多个文件(pdf,csv或者xls等)。取证失败的话，该数组为空<br>取证原文通知：为取证原文<br>存管证书通知：为存管证书<br>解析文件通知：为解析文件|N|    |
-|**data.jsonResult**|Int|文件解析完成 （10-解析成功, 12-无用户数据（公积金，任职信息，收入申报数据类型使用）， 13-公司名比对不匹配（企业版数据类型使用））<br>**除存管证书外的所有通知都会有这个字段**|N (非存管证书时)|    |
-|**data.certResult**|Int|存管证书生成完成（**仅存管证书通知会有这个字段**）|N (存管证书时)|    |
-|data.authorizedTs|Long|用户的完成授权的时间戳，单位是毫秒，值为 0 表示未授权。未授权的用户，接入方是无法拉取到用户的文件的。因此，可以判断authorizedTs > 0，确认状态无误即可下载。|N (非存管证书时)|    |
+|**data.daStatus**|Int|用户取证状态值：[daStatus 可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|N |    |
+|**data**.**fileUrlList**|数组|下载的文件的url，是一个数组，表明可能有多个文件(pdf,csv或者xls等)。取证失败的话，该数组为空<br>取证原文通知：为取证原文<br>解析文件通知：为解析文件|N|    |
+|**data.jsonResult**|Int|文件解析完成 （10-解析成功, 12-无用户数据（公积金，任职信息，收入申报数据类型使用）， 13-公司名比对不匹配（企业版数据类型使用））|N |    |
+|data.authorizedTs|Long|用户的完成授权的时间戳，单位是毫秒，值为 0 表示未授权。未授权的用户，接入方是无法拉取到用户的文件的。因此，可以判断authorizedTs > 0，确认状态无误即可下载。|N |    |
 |data.ext|对象|备用字段，ext是一个对象，用于扩展|Y|    |
 |data.ext.userId|String|接入方的取证用户的第三方userId ，**暂不使用**|N|    |
 |data.ext.fileKey|String|下载文件的fileKey|N|    |
@@ -1714,7 +1714,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 |data.ext.[].childDaList.site|String|N合1数据类型取证拆分出的子site|N|    |
 |data.ext.[].childDaList.daStatus|String|N合1数据类型取证拆分出的子daStatus|N|    |
 |data.ext.[].childDaList.daSubStatus|String|N合1数据类型取证拆分出的子daSubStatus|N|    |
-
+<!-- |**data.certResult**|Int|存管证书生成完成（**仅存管证书通知会有这个字段**）|N (存管证书时)|    | -->
 **注意：**通知的返回字段是**不经过aesKey加密的**。aesKey的调用时机是由接入方决定的，清洁环境取数后台无法存储每一笔取数的旧aesKey。故，通知的字段均为非加密。  
 注意2：通知的返回字段里**没有unzipPassword**。
 
@@ -1776,7 +1776,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 }
 ```  
 
-* 通知范例：存管证书（注意没有daStatus、jsonResult、authorizedTs，只有certResult）  
+<!-- * 通知范例：存管证书（注意没有daStatus、jsonResult、authorizedTs，只有certResult）  
 
 ```plain
 {
@@ -1796,7 +1796,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 		},
         "fileUrlList":["https://evidence-cert-bj-1308262583.cos.ap-beijing.myqcloud.com/cert_zd1uahd81590677482946936832_50bf4cc6bcad2fb13b3e1c5b384b28dd_chsi_xlzm.pdf?sign=q-sign-algorithm%3Dsha1%26q-ak%3DAKIDoRpxoOilX2GEuJRIsBDySfrnTszpOggP%26q-sign-time%3D1668084600%3B1668085200%26q-key-time%3D1668084600%3B1668085200%26q-header-list%3Dhost%26q-url-param-list%3D%26q-signature%3D0ff3ea33601610a1992231f4108022bebda972e0"]	}
 }
-```  
+```   -->
 
 * 通知范例：取证失败  
 
@@ -1826,22 +1826,23 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 1. 基于收到的通知，对文件拉取时机的判断条件设定：
   * 到用户授权完成通知（func = daUserAuthorized, daStatus = 10）时，就可以从fileUrlList里获取原始取证文件的下载路径，或调用get-original-file接口获取
   * 收到用户授权完成通知和解析完成通知（func = daFileParsed, jsonResult = 10）时，就可以从fileUrlList里获取解析结果json文件的下载路径，或调用get-parse-result接口获取
-  * 收到用户授权完成通知和存管证书生成通知（func = daCertGenerated, certResult = 10）时，就可以从fileUrlList里获取存管证书的下载路径，或调用get-cert-result接口获取
+  <!-- * 收到用户授权完成通知和存管证书生成通知（func = daCertGenerated, certResult = 10）时，就可以从fileUrlList里获取存管证书的下载路径，或调用get-cert-result接口获取 -->
   * 收到取证失败通知（func = daFailed）时，则无需再调用任何拉取接口，该笔订单失败
 
-2. 解析文件通知和存管证书通知均为可选配置，如解析本地化部署，则可以选择不发送和接受此类型通知，如业务不需要存管证书，则可以选择不发送和接收此类通知
-3. 一笔取证，如果成功，可能会收到上面用户取证原文通知，解析文件通知，存管证书通知三种类型的通知，但是所有成功相关通知发出的前提条件为**用户已授权，且用户协议上传成功，**否则通知不会发出；如果失败，只会收到取证失败通知一种类型的通知。
+<!-- 2. 解析文件通知和存管证书通知均为可选配置，如解析本地化部署，则可以选择不发送和接受此类型通知，如业务不需要存管证书，则可以选择不发送和接收此类通知 -->
+2. 解析文件通知可选配置，如解析本地化部署，则可以选择不发送和接受此类型通知
+3. 一笔取证，如果成功，可能会收到上面用户取证原文通知，解析文件通知，但是所有成功相关通知发出的前提条件为**用户已授权，且用户协议上传成功，**否则通知不会发出；如果失败，只会收到取证失败通知一种类型的通知。
 4. 清洁环境接入方在第一次通知失败时，会有按一定时间间隔的多次重试。**但通知不能保证必达，如因收发方服务器问题或网络问题等原因，导致通知不能到达，接入方需要针对此异常场景根据daId做兜底的超时拉取处理逻辑。详细可见下述：无法接收通知的兜底方案** [4.5 无法接收通知场景下的建议兜底方案](/zh/access/main?id=_45-无法接收通知场景下的建议兜底方案)
 5. **接入方需提供回调通知的URL，生产环境此接口的协议必须使用HTTPS，不能是HTTP**
 6. **通知的回包须严格遵守此json结构和key命名：**{"errorCode":0,"errorMessage":"OK"}，如果接收方收到此通知，则回包的errorCode必须返回0，否则发送方会视为失败继续重试。成功收到通知，建议直接回包，而对后续的针对通知数据的处理，请使用异步的方式处理，以避免此接口处理时间过长导致发送方超时重复发送。
 7. 通知的fileKey和fileUrl为明文，不做加密，可以直接使用下一节“返回值下载实例”所述的方式下载。
-8. 通知里文件url的有效期仅为5分钟，所以请收到后，立即异步处理文件下载以避免url过期导致下载失败。否则，接入方需要重新调用3.5（取证原始文件）、3.6（存管证书）、3.11（解析json）重新获取下载url和fileKey；而此时获取的下载url和fileKey是加密的，需要使用3.5.1的方式先解密再下载。
+8. 通知里文件url的有效期仅为5分钟，所以请收到后，立即异步处理文件下载以避免url过期导致下载失败。否则，接入方需要重新调用3.5（取证原始文件）、3.11（解析json）重新获取下载url和fileKey；而此时获取的下载url和fileKey是加密的，需要使用3.5.1的方式先解密再下载。
 
 ### 4.4 返回值下载实例
 
 本节为代码范例，介绍如何从通知接口的返回的加密fileKey和fileUrl完成下载。  
 注：**v2通知返回的fileKey和fileUrl一定是明文**，而主动拉取的返回结果为AES加密的。因此v2通知的fileKey和fileUrl可以不经过AES解密再使用（如3.5.2）；但主动拉取的返回结果需要先解密再下载（3.5.1+3.5.2）。  
-注：**为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果、存管证书），请及时拉取文件落库。**
+注：**为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。**
 
 清洁环境服务端云存储服务配置使用了文件存储服务端加密，则接口返回的fileKey字段不为空，需解密为一个base64的key，和解密后的fileUrl一起使用下面的代码下载文件，和普通文件下载的区别是header多设置了3个文件下载解密的参数。
 
@@ -1868,13 +1869,13 @@ void testDownloadUsingPresignedUrl() throws Exception{
 
 ### 4.5 无法接收通知场景下的建议兜底方案
 
-通知不能保证必达，如因双方服务器问题或网络问题等原因，导致通知不能到达，接入方需要针对此异常场景根据daId做兜底的超时拉取处理逻辑。一般地，将单次取证链接的生成时间记为T0，成功完成（daStatus=0 且 authorizedTs>0）记为T，则平均解析完成时间、存管证书生成时间、最大超时时间为：
+通知不能保证必达，如因双方服务器问题或网络问题等原因，导致通知不能到达，接入方需要针对此异常场景根据daId做兜底的超时拉取处理逻辑。一般地，将单次取证链接的生成时间记为T0，成功完成（daStatus=0 且 authorizedTs>0）记为T，则平均解析完成时间、最大超时时间为：
 
 <!-- （注：邮箱模式包括所有beehive-和qqmail-开头） -->
 
-|取数类型site|开始/完成时间|解析完成时间|存管证书生成时间|最大超时时间|
-|:----|:----|:----|:----|:----|
-|vdi模式取数|T0 / T|T+1s|T+300s|T0 + 20min|
+|取数类型site|开始/完成时间|解析完成时间|最大超时时间|
+|:----|:----|:----|:----|
+|vdi模式取数|T0 / T|T+1s|T0 + 20min|
 <!-- |邮箱模式取数|    |    |    |T0 + 60min| -->
 
 **最佳实践：**
@@ -1882,15 +1883,15 @@ void testDownloadUsingPresignedUrl() throws Exception{
 * 接入方对每一笔取证，当您的前端收到结束信息时（h5/sdk webview返回，或小程序的完成跳转信息），则：
   * 调用3.5接口拉取原始文件的时机：收到前端结束信息后调用3次，每次间隔0s、10s、60s，成功即止
   * 调用3.11接口拉取解析结果的时机：收到前端结束信息后调用3次，每次间隔5s、1min、10min，成功即止
-  * 调用3.6接口拉取存管证书的时机：收到前端结束信息后调用2次，每次间隔为10min、24hr，成功即止（您也可以使用定期任务统一拉取下载）
+  <!-- * 调用3.6接口拉取存管证书的时机：收到前端结束信息后调用2次，每次间隔为10min、24hr，成功即止（您也可以使用定期任务统一拉取下载） -->
 * 如果您的前端无法稳定地收到结束信息，则：
   * 调用3.5接口拉取原始文件的时机：该笔取证daId生成后调用1次，间隔20min（vdi模式）/ 60min（非vdi模式）
   * 调用3.11接口拉取解析结果的时机：该笔取证daId生成后调用1次，间隔20min（vdi模式）/ 60min（非vdi模式）
-  * 调用3.6接口拉取存管证书的时机：该笔取证daId生成后调用1次，间隔25min（vdi模式）/ 65min（非vdi模式）
+  <!-- * 调用3.6接口拉取存管证书的时机：该笔取证daId生成后调用1次，间隔25min（vdi模式）/ 65min（非vdi模式） -->
 * 您也可以在生成daId之后，每隔一段时间（建议60s）调用3.8接口，并在符合以下条件时：
   * daStatus = 10 且 authorizedTs > 0 时，调用3.5接口拉取原始文件
   * daStatus = 10 且 authorizedTs > 0 且 jsonResult = 10，调用3.11接口拉取解析结果
-  * certResult = 10且 authorizedTs > 0 ，调用3.6接口拉取存管证书
+  <!-- * certResult = 10且 authorizedTs > 0 ，调用3.6接口拉取存管证书 -->
   * daStatus < 10，视为取证中的中间态，需要继续调用
   * daStatus > 10，视为取证终态失败，无需调用
   * 对于vdi模式取数，最多调用20min
