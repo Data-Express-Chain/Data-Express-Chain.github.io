@@ -597,7 +597,6 @@ Before accessing the clean environment, the integrator needs to call this interf
 
 Note: Please contact your tech support for specific Service Provider Domain.
 
-
 * Request Param
 
 | Parameter Name                                | Type         | Description                                                                                                                                                                                                                                                                                                                                                                | Required | Length Limit                                           |
@@ -621,7 +620,7 @@ Note: Please contact your tech support for specific Service Provider Domain.
 | arg.ext                                       | Object       | Spare field, ext is an object for extension                                                                                                                                                                                                                                                                                                                                | N        |                                                        |
 | arg.ext.attach                                | String       | Additional data, if passed in, this field will be carried in the ext of the backend notification data                                                                                                                                                                                                                                                                      | N        | 128 characters (byte), note not 128 Chinese characters |
 | arg.ext.urlattach                             | String       | Additional field for callback URL (only for H5 access). Used to carry additional parameters when returning from our authorization page to the integrator's H5 page. When the user returns from our authorization page to the integrator's H5 page after completing data acquisition, the URL will carry this parameter: key is attach_url, value is the value passed here. | N        | 12 characters                                          |
-| arg.ext.childSites                            | Array        | When arg.site is Alipay N-in-1 or 12123App N-in-1, the childSites array values can only be selected from the following fields, which need to correspond to the user's selection on the frontend: Alipay N-in-1: [app-alipay-huabei, app-alipay-jiebei, app-alipay-cr, app-alipay-wsd] 12123App N-in-1: [app-tmri-xsz, app-tmri-jsz, app-tmri-jsjl]                         | N        |                                                        |
+| arg.ext.childSites                            | Array        | Child Sites information                                                                                                                                                                                                                                                                                                                                                    | N        |                                                        |
 | arg.ext.tmriValidDays                         | Integer      | The number of days the secure driving record is valid, needs to be an integer value between 1-90. If not passed or passed value is not in the range of 1-90, the default value of 7 will be automatically set                                                                                                                                                              | N        | Integer value between 1-90                             |
 | arg.ext.companyFullName                       | String       | Organization name (only open to specific channels)                                                                                                                                                                                                                                                                                                                         | N        | 32 characters                                          |
 | arg.ext.companyShortName                      | String       | Organization abbreviation (only open to specific channels)                                                                                                                                                                                                                                                                                                                 | N        | 32 characters                                          |
@@ -695,7 +694,7 @@ Note: Please contact your tech support for specific Service Provider Domain.
 }
 ```
 
-Note: The generated link is valid for 8 minutes (expiration time of vcode). If it is not clicked to enter within this time, it will expire. If clicked and entered for non-email mode, the operation timeout is 10 minutes; for email mode, the operation timeout is 60 minutes. If timed out, it will prompt that the link has expired.
+Note: The generated link is valid for 8 minutes (expiration time of vcode). If it is not clicked to enter within this time, it will expire. If clicked and entered, the operation timeout is 10 minutes. If timed out, it will prompt that the link has expired.
 
 Note: Regarding re-entry to this link: For security and prevention of re-entry, the generated link can only be used to generate a login state once, meaning as long as the login state is maintained, it can be refreshed in the webview or suspended (such as pulling down to the bottom right corner in H5 mode within the WeChat ecosystem), or switched to the background, all without affecting the current data acquisition. However, if the integrator's user clicks the URL again to enter, it will cause the login state to be rebuilt, and at this time, it will prompt that the link has expired, and start-vdi needs to be called again.
 
@@ -825,19 +824,19 @@ Note: For the specific Service Provider Domain, please contact your Tech Support
 
 * Request:
 
-| Parameter Name      | Type         | Description                                                                                                                                                                                                                                                                                                                     | Required | Length |
-| :------------------ | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------- | :----- |
-| v                   | String       | Version number, default is 1.0.0                                                                                                                                                                                                                                                                                                | Y        | 8      |
-| auth                | Object       |                                                                                                                                                                                                                                                                                                                                 | Y        |        |
-| auth.appId          | String       | Enter the pre-assigned appId                                                                                                                                                                                                                                                                                                    | Y        | 8      |
-| auth.nonce          | String       | 32-bit random string (a combination of letters and numbers), a different value must be passed each time the call is made                                                                                                                                                                                                        | Y        | 32     |
-| arg                 | Object       |                                                                                                                                                                                                                                                                                                                                 | Y        |        |
-| arg.idNo            | String       | ID card number of the user using VDI. **The System Integrator needs to first validate the legality of the ID card number and reject requests that do not comply with the format and length of the ID card number.**  *Note: The System Integrator needs to encrypt this field using aesKey and then Base64 encode it.* | Y        |        |
-| arg.site            | String       | Data Source                                                                                                                                                                                                                                                                                                                     | Y        |        |
-| arg.files[]         | Object Array | Array of protocol files                                                                                                                                                                                                                                                                                                         | Y        |        |
-| arg.files[].name    | String       | File name                                                                                                                                                                                                                                                                                                                       | Y        |        |
-| arg.files[].content | String       | File content.*Note: Encrypt the file stream using aesKey, then Base64 encode the encrypted file stream.*                                                                                                                                                                                                                      | Y        |        |
-| arg.ext             | Object       | Reserved field, ext is an object for extension                                                                                                                                                                                                                                                                                  | N        |        |
+| Parameter Name      | Type         | Description                                                                                                                                                                                                                                                                                                                   | Required | Length |
+| :------------------ | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :----- |
+| v                   | String       | Version number, default is 1.0.0                                                                                                                                                                                                                                                                                              | Y        | 8      |
+| auth                | Object       |                                                                                                                                                                                                                                                                                                                               | Y        |        |
+| auth.appId          | String       | Enter the pre-assigned appId                                                                                                                                                                                                                                                                                                  | Y        | 8      |
+| auth.nonce          | String       | 32-bit random string (a combination of letters and numbers), a different value must be passed each time the call is made                                                                                                                                                                                                      | Y        | 32     |
+| arg                 | Object       |                                                                                                                                                                                                                                                                                                                               | Y        |        |
+| arg.idNo            | String       | ID card number of the user using VDI.**The System Integrator needs to first validate the legality of the ID card number and reject requests that do not comply with the format and length of the ID card number.**  *Note: The System Integrator needs to encrypt this field using aesKey and then Base64 encode it.* | Y        |        |
+| arg.site            | String       | Data Source                                                                                                                                                                                                                                                                                                                   | Y        |        |
+| arg.files[]         | Object Array | Array of protocol files                                                                                                                                                                                                                                                                                                       | Y        |        |
+| arg.files[].name    | String       | File name                                                                                                                                                                                                                                                                                                                     | Y        |        |
+| arg.files[].content | String       | File content.*Note: Encrypt the file stream using aesKey, then Base64 encode the encrypted file stream.*                                                                                                                                                                                                                    | Y        |        |
+| arg.ext             | Object       | Reserved field, ext is an object for extension                                                                                                                                                                                                                                                                                | N        |        |
 
 * Request
 
@@ -997,7 +996,7 @@ Note: Please contact your Tech Support to obtain the specific Service Provider D
         "fileUrl": [
             "ZjkJD3UrtkM8EOr70OrCJP7uj671NocN3ObdxSMlqjlSvJPDlH4z85jKHlz2HVuJnj+tU7fHem88QYNr545HYcGJSJ0EKgRdRY+Bn+yAUc5+xAjIUD+UGRxof1o3MrErlaQytexIOf8yjfcMt0HoFQQGRvzNMFha6fRFRibYn0x+8yUnscaDIkEmwKFja2r2a3kezroVlB1dVuY0DQbd5cALbmTXXN+sNU4xzR9npROBVRspwh6jMeUbhLX5phRx/YDEbxBcNshP3qWYNt/ywzrl74T/Ve/05iVrY4iM8MUeYjWjxo9B/MCizIJfLBEak5zaaDMI7aEHgBXA0qw1CYk1wzVW8THbYrcbWikB14tlt8b6Bwi3Dr8Av7fwUzG0W4DzCxZZVgb8MzChYNKAxWvfKq4a1Ivu+IzbgRJm0z681eKe5h0TPGuFRrKtXW4nCG973jTPz//6JpdIjnB92YMfxsYI0T+YZhP7mV/pJxAFbWWbdGIaXKcyPj+ABHvPDk0R7UhKWXcRJX5SYhx9UlgDKpK9LBYnqyGukMymd9/Hw3cz5/rklJWTynpS8eMlDqJ9w9Bzpn1KOtKKWfKYXpfozvbovXNh3E83MaG8JyzlpT6FPD41FJa6D7fyuTA7L126f8rYrQ00xBHAHilPTK2LRhITSABhlUySDrroNjWxV6Wu5LI+1oK7WAaTyK9I+z1gXTrpSHcd2oRrxU2Lo9+mTdvjAbs2Mbp6pxeSYYc="
         ],
-        "site": "beehive-alipay",
+        "site": "tax",
         "ext": {
             "dl": [],
             "fileKey": "7pfdqjwnUAy2GZXHy02Pdxz2S6wZEp1U7wOzycwmoorRI4nkTz5jC+dXK6ORRuLS"
@@ -1043,9 +1042,9 @@ The Cloud storage service configuration of the clean environment backend uses se
 ```java
 @Test
 void testDownloadUsingPresignedUrl() throws Exception{
-        String presignedUrl = "https://evidence-file-1308262583.cos.ap-guangzhou.myqcloud.com/de1uahd81493120767678877696_7e124dc1ada11b91527e6e6961acc97a_qqmail-alipay_jyls-0.pdf?sign=q-sign-algorithm%3Dsha1%26q-ak%3DAKIDoRpxoOilX2GEuJRIsBDySfrnTszpOggP%26q-sign-time%3D1646480278%3B1646480878%26q-key-time%3D1646480278%3B1646480878%26q-header-list%3Dhost%3Bx-cos-server-side-encryption-customer-algorithm%3Bx-cos-server-side-encryption-customer-key%3Bx-cos-server-side-encryption-customer-key-md5%26q-url-param-list%3D%26q-signature%3D7e752832991291f92df05edb949f56a3f99c2d2d";
+        String presignedUrl = "https://evidence-file-1308262583.cos.ap-guangzhou.myqcloud.com/de1uahd81493120767678877696_7e124dc1ada11b91527e6e6961acc97a_qqmail_jyls-0.pdf?sign=q-sign-algorithm%3Dsha1%26q-ak%3DAKIDoRpxoOilX2GEuJRIsBDySfrnTszpOggP%26q-sign-time%3D1646480278%3B1646480878%26q-key-time%3D1646480278%3B1646480878%26q-header-list%3Dhost%3Bx-cos-server-side-encryption-customer-algorithm%3Bx-cos-server-side-encryption-customer-key%3Bx-cos-server-side-encryption-customer-key-md5%26q-url-param-list%3D%26q-signature%3D7e752832991291f92df05edb949f56a3f99c2d2d";
         String fileKey = "Nx1socBWUxPg8nceCqmANSzl6zJ0+IKwtgJPaMbv4CY=";
-        String downloadFileSavePath = "E:\\de1uahd81493120767678877696_7e124dc1ada11b91527e6e6961acc97a_qqmail-alipay_jyls-0.pdf";
+        String downloadFileSavePath = "E:\\de1uahd81493120767678877696_7e124dc1ada11b91527e6e6961acc97a_qqmail_jyls-0.pdf";
         MessageDigest md5 = MessageDigest.getInstance("md5");
         byte[] md5Bytes = md5.digest(Base64.getDecoder().decode(fileKey));
         String base64Md5 = Base64.getEncoder().encodeToString(md5Bytes);
@@ -1319,7 +1318,7 @@ Another example with child sites:
         "daId":"zd20kldt1691346833000402944",
         "daStatus":10,
         "appId":"zd20kldt",
-        "browsingSite":"app-alipay-any",
+        "browsingSite":"tax-any",
         "bizNo":"1692083483002",
         "jsonResult":10,
         "certResult":10,
@@ -1328,19 +1327,19 @@ Another example with child sites:
             "childDaList":[
                 {
                     "daId":"zd20kldt1691346833000402944-0",
-                    "site":"app-alipay-huabei",
+                    "site":"tax-a",
                     "daStatus":10,
                     "daSubStatus":null
                 },
                 {
                     "daId":"zd20kldt1691346833000402944-1",
-                    "site":"app-alipay-cr",
+                    "site":"tax-b",
                     "daStatus":10,
                     "daSubStatus":null
                 },
                 {
                     "daId":"zd20kldt1691346833000402944-2",
-                    "site":"app-alipay-jiebei",
+                    "site":"tax-c",
                     "daStatus":10,
                     "daSubStatus":null
                 }
@@ -1473,7 +1472,7 @@ Note: Please contact your tech support to obtain the specific service domain.
 | biz_no                    | Third-party business serial number                                                                                                       |
 | app_id                    | AppID pre-assigned for access to the data express chain                                                                                  |
 | site                      | Actual data type acquired                                                                                                                |
-| original_site             | The original data type of the acquisition, only available when the beehive mode switches to the mailbox mode                             |
+| original_site             | The original data type of the acquisition (Not usable)                                                                                   |
 | access_way                | Access mode                                                                                                                              |
 | da_status                 | Acquisition status code                                                                                                                  |
 | da_sub_status             | Acquisition sub-status code                                                                                                              |
@@ -1585,7 +1584,7 @@ Note: Please contact your integration partner to obtain the specific service pro
         "jsonFileUrl": [
             "ZjkJD3UrtkM8EOr70OrCJAkNPiwFnBE0i8tiiLlelGFSvJPDlH4z85jKHlz2HVuJnj+tU7fHem88QYNr545HYcGJSJ0EKgRdRY+Bn+yAUc5+xAjIUD+UGRxof1o3MrErlaQytexIOf8yjfcMt0HoFQQGRvzNMFha6fRFRibYn0x+8yUnscaDIkEmwKFja2r2dE2ZklmbBlTAl83X8mSkuge6iJ3ylFnQq769zpl7nmi0mTHzokgoKVUknuvn7SLMSXU7jmh3iACZ4I8W676DVZtkBQ1Bk6Kz9wWy37oxRZHCKhnopHA7maQZQo3ZArnsLAg0wMzCyPL93zlog7LirXh02/fV8EN0n1QZb7Kl93mSybrKZm6QlC2VVcN+flNmcSt4JOFF2lnO8xwDvRczHHo1i/LtnE32ITILnS2YnaXacoERF3AOtrAxUUqYvmvD9vkKFUrikeRV0mAI8tY3d2QUh5S0qTpWlZQpwTgcyUk9mCYzMOoFJH4dxxwuipNpz8wKl3zyaaKG3dD7lmTBubdiijN+GDhZPCL1GlgUPxUSMF9uAdbqXZkve12eXsjwMKg6ePllxwVol3dhDlaRJfYXPMj/FfzNvDZInX198l0UQfmdPf7PaRb4Brnx+fvtnhcQdVxX2BGBwaoiluGcQrAwv2/bJSIbviqYHOUGA/vL9zFUc0bDruDWK+0Mj8SAaU1RT3Jqnnk8WmX3DJNUpxo2ENzqTmWLDoTUHRg4Dk4="
         ],
-        "site": "beehive-alipay",
+        "site": "tax",
         "ext": {
             "dl": [],
             "fileKey": "7pfdqjwnUAy2GZXHy02Pdxz2S6wZEp1U7wOzycwmoorRI4nkTz5jC+dXK6ORRuLS"
@@ -1615,7 +1614,7 @@ Note: The v2 format notification is currently in the trial operation phase. If t
 ### 4.1 What Notifications May Occur During the Entire Data Acquisition Cycle
 
 * Notification of the final state of data acquisition failure (required): **daFailed**, issued immediately
-* Data Acquisition Original File Notification/Authorization Completion Notification (required): **daUserAuthorized**, after the user data acquisition is successful and the user agreement is uploaded successfully, a file notification with the download address of the **Original-File** will be sent. If it is an asynchronous download data type (such as Alipay N in one), it needs to wait for the download to be completed, which may be issued about 30s after the front-end agrees to submit; otherwise, it is issued immediately.
+* Data Acquisition Original File Notification/Authorization Completion Notification (required): **daUserAuthorized**, after the user data acquisition is successful and the user agreement is uploaded successfully, a file notification with the download address of the **Original-File** will be sent. If it is an asynchronous download data type, it needs to wait for the download to be completed, which may be issued about 30s after the front-end agrees to submit; otherwise, it is issued immediately.
 * Parsed-Original-File Notification: **daFileParsed**, if it is not a localized parsing deployment, and the user agreement and authorization are completed, a notification with the download address of the **parsing result json file** will be sent after **parsing is completed**, generally delayed for 5 to 10 seconds after issuing daUserAuthorized.
 
 ### 4.2 Generation and Verification of Notification Signature
@@ -1685,7 +1684,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 | data.ext.fileKey                    | String     | The fileKey for downloading the file                                                                                                                                                                                                                                            | N        |                |
 | data.ext.pdfPassword                | Array      | If the downloaded file is a PDF that requires a password, this field will be returned                                                                                                                                                                                           | N        |                |
 | data.ext.daSubStatus                | Integer    | User data acquisition status subcode, indicating some failure details, such as no files for data acquisition. Possible values:[daSubStatus possible values](/en/access/appendix?id=_9-dasubstatus-enum-table)                                                                      | N        |                |
-| data.ext.childDaList                | Array      | Present in N-in-1 data types, such as app-alipay-any, app-tax-any                                                                                                                                                                                                               | N        |                |
+| data.ext.childDaList                | Array      | Present in N-in-1 data types                                                                                                                                                                                                                                                    | N        |                |
 | data.ext.[].childDaList.daId        | String     | The sub daId for N-in-1 data type data acquisition                                                                                                                                                                                                                              | N        |                |
 | data.ext.[].childDaList.site        | String     | The sub site for N-in-1 data type data acquisition                                                                                                                                                                                                                              | N        |                |
 | data.ext.[].childDaList.daStatus    | String     | The sub daStatus for N-in-1 data type data acquisition                                                                                                                                                                                                                          | N        |                |
@@ -1810,9 +1809,9 @@ Here is the code example for downloading the file using the pre-signed URL:
 ```java
 @Test
 void testDownloadUsingPresignedUrl() throws Exception{
-        String presignedUrl = "https://evidence-file-1308262583.cos.ap-guangzhou.myqcloud.com/de1uahd81493120767678877696_7e124dc1ada11b91527e6e6961acc97a_qqmail-alipay_jyls-0.pdf?sign=q-sign-algorithm%3Dsha1%26q-ak%3DAKIDoRpxoOilX2GEuJRIsBDySfrnTszpOggP%26q-sign-time%3D1646480278%3B1646480878%26q-key-time%3D1646480278%3B1646480878%26q-header-list%3Dhost%3Bx-cos-server-side-encryption-customer-algorithm%3Bx-cos-server-side-encryption-customer-key%3Bx-cos-server-side-encryption-customer-key-md5%26q-url-param-list%3D%26q-signature%3D7e752832991291f92df05edb949f56a3f99c2d2d";
+        String presignedUrl = "https://evidence-file-1308262583.cos.ap-guangzhou.myqcloud.com/de1uahd81493120767678877696_7e124dc1ada11b91527e6e6961acc97a_qqmail_jyls-0.pdf?sign=q-sign-algorithm%3Dsha1%26q-ak%3DAKIDoRpxoOilX2GEuJRIsBDySfrnTszpOggP%26q-sign-time%3D1646480278%3B1646480878%26q-key-time%3D1646480278%3B1646480878%26q-header-list%3Dhost%3Bx-cos-server-side-encryption-customer-algorithm%3Bx-cos-server-side-encryption-customer-key%3Bx-cos-server-side-encryption-customer-key-md5%26q-url-param-list%3D%26q-signature%3D7e752832991291f92df05edb949f56a3f99c2d2d";
         String fileKey = "Nx1socBWUxPg8nceCqmANSzl6zJ0+IKwtgJPaMbv4CY=";
-        String downloadFileSavePath = "E:\\de1uahd81493120767678877696_7e124dc1ada11b91527e6e6961acc97a_qqmail-alipay_jyls-0.pdf";
+        String downloadFileSavePath = "E:\\de1uahd81493120767678877696_7e124dc1ada11b91527e6e6961acc97a_qqmail_jyls-0.pdf";
         MessageDigest md5 = MessageDigest.getInstance("md5");
         byte[] md5Bytes = md5.digest(Base64.getDecoder().decode(fileKey));
         String base64Md5 = Base64.getEncoder().encodeToString(md5Bytes);
@@ -1830,12 +1829,9 @@ void testDownloadUsingPresignedUrl() throws Exception{
 
 Notifications cannot be guaranteed to be delivered due to server issues or network problems on either side, which may prevent the notification from reaching its destination. The accessing party needs to implement a contingency retrieval logic based on `daId` for this exceptional scenario. Generally, the time when the data aquisition link is generated is marked as T0, and the successful completion (with `daStatus=0` and `authorizedTs>0`) is marked as T. The average parsing completion time, and maximum timeout time are as follows:
 
-(Note: Email mode includes all those starting with "beehive-")
-
 | Data Collection Type (site) | Start/Completion Time | Parsing Completion Time | Maximum Timeout Time |
 | --------------------------- | --------------------- | ----------------------- | -------------------- |
 | Non-email Mode Collection   | T0 / T                | T+1s                    | T0 + 20min           |
-| Email Mode Collection       |                       |                         | T0 + 60min           |
 
 **Best Practices:**
 
@@ -1845,14 +1841,14 @@ Notifications cannot be guaranteed to be delivered due to server issues or netwo
   * Call interface 3.11 to retrieve the parsing results: Make 3 attempts after receiving the front-end end information, with intervals of 5s, 1min, and 10min respectively, stop once successful.
 * If your front end cannot reliably receive the end information, then:
 
-  * Call interface 3.5 to retrieve the original file: Make 1 attempt after the generation of the `daId`, with an interval of 20min (non-email) / 60min (email).
-  * Call interface 3.11 to retrieve the parsing results: Make 1 attempt after the generation of the `daId`, with an interval of 20min (non-email) / 60min (email).
+  * Call interface 3.5 to retrieve the original file: Make 1 attempt after the generation of the `daId`, with an interval of 20min.
+  * Call interface 3.11 to retrieve the parsing results: Make 1 attempt after the generation of the `daId`, with an interval of 20min.
 * You may also call interface 3.8 at regular intervals (recommended 60s) after the `daId` is generated, and call the following interfaces when the following conditions are met:
 
   * If `daStatus = 10` and `authorizedTs > 0`, call interface 3.5 to retrieve the original file.
   * If `daStatus = 10` and `authorizedTs > 0` and `jsonResult = 10`, call interface 3.11 to retrieve the parsing results.
   * If `daStatus < 10`, it is considered an intermediate state of the data aquisition process, and the call needs to continue.
   * If `daStatus > 10`, it is considered a final state of data aquisition failure, no further calls are needed.
-  * For email collection, the maximum call duration is 60min; for non-email collection, the maximum call duration is 20min.
+  * Maximum call duration is 20min.
 
 Note: For data aquisition via the fullminiapp method, `daId` cannot be used directly for fallback. It is necessary to first obtain the value of the `userId` field in the return data, establish its relationship with `daId`, and then use `daId` to attempt fallback. Alternatively, the daily reconciliation statement interface 3.10 can be used for fallback.

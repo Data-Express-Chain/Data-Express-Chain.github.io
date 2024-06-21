@@ -103,9 +103,9 @@ openssl pkcs8 -topk8 -inform PEM -in rsa_private_key.pem -outform PEM -nocrypt -
 ```java
 @Test
 void testDownloadUsingPresignedUrl() throws Exception{
-        String presignedUrl = "https://evidence-file-1308262583.cos.ap-guangzhou.myqcloud.com/de1uahd81493120767678877696_7e124dc1ada11b91527e6e6961acc97a_qqmail-alipay_jyls-0.pdf?sign=q-sign-algorithm%3Dsha1%26q-ak%3DAKIDoRpxoOilX2GEuJRIsBDySfrnTszpOggP%26q-sign-time%3D1646480278%3B1646480878%26q-key-time%3D1646480278%3B1646480878%26q-header-list%3Dhost%3Bx-cos-server-side-encryption-customer-algorithm%3Bx-cos-server-side-encryption-customer-key%3Bx-cos-server-side-encryption-customer-key-md5%26q-url-param-list%3D%26q-signature%3D7e752832991291f92df05edb949f56a3f99c2d2d";
+        String presignedUrl = "https://evidence-file-1308262583.cos.ap-guangzhou.myqcloud.com/de1uahd81493120767678877696_7e124dc1ada11b91527e6e6961acc97a_qqmail_jyls-0.pdf?sign=q-sign-algorithm%3Dsha1%26q-ak%3DAKIDoRpxoOilX2GEuJRIsBDySfrnTszpOggP%26q-sign-time%3D1646480278%3B1646480878%26q-key-time%3D1646480278%3B1646480878%26q-header-list%3Dhost%3Bx-cos-server-side-encryption-customer-algorithm%3Bx-cos-server-side-encryption-customer-key%3Bx-cos-server-side-encryption-customer-key-md5%26q-url-param-list%3D%26q-signature%3D7e752832991291f92df05edb949f56a3f99c2d2d";
         String fileKey = "Nx1socBWUxPg8nceCqmANSzl6zJ0+IKwtgJPaMbv4CY=";
-        String downloadFileSavePath = "E:\\de1uahd81493120767678877696_7e124dc1ada11b91527e6e6961acc97a _qqmail-alipay_jyls-0.pdf";
+        String downloadFileSavePath = "E:\\de1uahd81493120767678877696_7e124dc1ada11b91527e6e6961acc97a _qqmail_jyls-0.pdf";
         MessageDigest md5 = MessageDigest.getInstance("md5");
         byte[] md5Bytes = md5.digest(Base64Decoder.decode(fileKey));
         String base64Md5 = Base64Encoder.encode(md5Bytes);
@@ -119,32 +119,9 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```
 
-## 7. 测试及生产环境出口IP  
+## 7. daSubStatus枚举表格  
 
-测试通知回调出网（从清洁环境到合作方）：  
-
-
-测试环境域名入网（从合作方访问清洁环境，端口为443）：  
-
-
-生产通知回调出网（从清洁环境到合作方）：  
-
-
-生产环境域名入网（从合作方访问清洁环境，端口为443）：  
-
-
-## 8. 接入方从云对象存储拉取文件时，所需开通网络策略涉及的域名  
-
-测试环境相关的对象存储域名：  
-
-生产环境相关的对象存储域名：  
-
-
-注：您需要为上述的域名开通网络外访权限。所有文件的域名都在上述列表中，不会改变。这些域名没有对应的固定IP地址。如果您的外访公网不支持对域名单开权限，请联系您的对接同学。
-
-## 9. daSubStatus枚举表格  
-
-注：daSubStatus仅为取证失败详情描述，不作为计费与否指标。  
+注：daSubStatus仅为取证失败详情描述。  
 （本表格会随着支持的数据源不断迭代更新，已列出的错误码不会修改）
 
 通用：  
@@ -245,7 +222,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
  -->
 
 
-## 10. 生产上线前检视checklist
+## 8. 生产上线前检视checklist
 1. 公共部分
     * 面客前，确认全流程已走通至少一笔（真实入口进入，完成取证、收通知、拉取文件、完成业务）
     * 确认生产环境公钥已提供、回调地址不改变、以及所有的出网IP已提供，如有变化，必须提前2天告知
@@ -270,27 +247,3 @@ void testDownloadUsingPresignedUrl() throws Exception{
 
 2. 如果使用H5方式接入
     * 再次确认生产环境的入口页和结果页
-
-3. **如果使用本地化部署解析方式进行解析，建议配置Webhook**
-解析工程部署在gitee上。由于解析工程会有定期更新，因此建议接入方在上线前先部署接收工程代码改动的Webhook，以便及时了解代码更新状况。
-
-Gitee webhook的说明：[https://gitee.com/help/categories/40](https://gitee.com/help/categories/40) ；企业微信、钉钉、飞书可以原生支持Gitee webhook，您可在此页面查询具体的操作步骤；也可以使用三方HTTP接口方式接收通知。
-
-接入方需提供通知url给到我们进行配置；配置完成后，即可实时接收解析工程代码更新。
-
-
-<!-- ## 11. 国密算法参考实现文档  
-
-请参考：[https://shimo.im/docs/wV3VV8g0voTXj13y](https://shimo.im/docs/wV3VV8g0voTXj13y) -->
-
-## 12. 部署资源建议  
-
-对接方可能需要使用到的资源及部署，最小化的硬件建议如下表：
-
-|场景|描述|系统环境|CPU|内存|硬盘|数量|
-|:----|:----|:----|:----|:----|:----|:----|
-|本地化解析部署|部署本地化解析的运行环境|Linux, JDK 1.8+|4C|8G|100G|1|
-|接收通知后台|接收清洁环境发出的取数状态变化通知|Linux|1C|1G|-|1|
-
-
-
