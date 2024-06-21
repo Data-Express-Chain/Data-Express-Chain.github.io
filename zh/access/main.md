@@ -670,7 +670,7 @@ FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 |errorMessage|String|返回结果描述|Y|    |
 |data|对象|    |对象|    |
 |data.daId|String|取证ID|string|    |
-|data.bizNo|String|业务层流水号（fullminiapp方式无此返回）|Y|    |
+|data.bizNo|String|业务层流水号|Y|    |
 |data.fileUrl|数组|下载的源文件的url，是一个数组，表明可能有多个文件(pdf,csv或者xls等)。取证失败的话，该数组为空<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|Y|    |
 |data.site|String|用户访问的数据类型：[site的可能取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)|Y|    |
 |data.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
@@ -1229,7 +1229,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |errorMessage|String|返回结果描述|Y|
 |data|对象|    |对象|
 |data.daId|String|取证ID|string|
-|data.bizNo|String|业务层流水号（fullminiapp方式无此返回）|Y|
+|data.bizNo|String|业务层流水号|Y|
 |data.**jsonResult**|int|文件解析的状态（取值见下）|Y|
 |data.jsonFileUrl|String|PDF等文件对应的结构化数据，数组，每一个元素对应一个文件的结构化数据<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|Y|
 |data.site|String|用户访问的site|Y|
@@ -1698,7 +1698,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 |data|对象|    |Y|    |
 |data.bizAppId|String|接入方的appId|Y|    |
 |data.daId|String|取证ID|Y|    |
-|data.bizNo|String|接入方流水号（如果是从清洁环境直接进入的场景，这个字段为空字符串，如fullminiapp独立小程序方式）|Y|128个字符|
+|data.bizNo|String|接入方流水号（如果是从清洁环境直接进入的场景，这个字段为空字符串）|Y|128个字符|
 |data.site|String|用户访问的数据类型：[site的可能取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)|Y|32个字符|
 |**data.daStatus**|Int|用户取证状态值：[daStatus 可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|N |    |
 |**data**.**fileUrlList**|数组|下载的文件的url，是一个数组，表明可能有多个文件(pdf,csv或者xls等)。取证失败的话，该数组为空<br>取证原文通知：为取证原文<br>解析文件通知：为解析文件|N|    |
@@ -1880,7 +1880,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 
 **最佳实践：**
 
-* 接入方对每一笔取证，当您的前端收到结束信息时（h5/sdk webview返回，或小程序的完成跳转信息），则：
+* 接入方对每一笔取证，当您的前端收到结束信息时（h5/sdk webview返回），则：
   * 调用3.5接口拉取原始文件的时机：收到前端结束信息后调用3次，每次间隔0s、10s、60s，成功即止
   * 调用3.11接口拉取解析结果的时机：收到前端结束信息后调用3次，每次间隔5s、1min、10min，成功即止
   <!-- * 调用3.6接口拉取存管证书的时机：收到前端结束信息后调用2次，每次间隔为10min、24hr，成功即止（您也可以使用定期任务统一拉取下载） -->
