@@ -1469,7 +1469,6 @@ void testDownloadUsingPresignedUrl() throws Exception{
 String sign = sign(redirectUrl, 接入方私钥)；
 ```    
 
-注：如使用国密接入，sign方法参考[SM2生成签名代码示例](https://shimo.im/docs/wV3VV8g0voTXj13y#anchor-Tr1u) 《国密算法参考》  
 
 2. 生成进入VDI页面完整URL：  
 * 把生成的签名拼接在redirectUrl后面。示例：   
@@ -1900,27 +1899,3 @@ void testDownloadUsingPresignedUrl() throws Exception{
 <!-- 注：对于fullminiapp方式的取证，无法直接使用daId进行兜底，必须在获取到返回的ext.userId字段值之后，根据此值建立其与daId的关系，再用daId去尝试兜底。或者，可以使用3.10的日终对账单接口进行兜底。 -->
 
 
-
-<!-- ## 5 附录
-
-### 5.1 [目前支持的接入方式（accessWay）](https://shimo.im/docs/B1Aw1QdNbRC2G2qm#anchor-PSTv)
-
-### 5.2 [目前支持的数据类型 (site)](/zh/access/appendix?id=_2-目前支持的数据类型-site)
-
-### 5.3 [daStatus的可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)
-
-### 5.4[ accessWay可能取值](https://shimo.im/docs/B1Aw1QdNbRC2G2qm#anchor-PSTv)
-
-### 5.5 [如何生成RSA公私钥](https://shimo.im/docs/B1Aw1QdNbRC2G2qm#anchor-LbDM)
-
-### 5.6 [如何下载使用了文件服务端加密的文件](https://shimo.im/docs/B1Aw1QdNbRC2G2qm#anchor-ghEd)
-
-### 5.7 [测试及生产环境回调通知出口IP](https://shimo.im/docs/B1Aw1QdNbRC2G2qm#anchor-MkBS)
-
-### 5.8 [接入方从腾讯云COS拉取文件时，所需开通网络策略涉及的域名](https://shimo.im/docs/B1Aw1QdNbRC2G2qm#anchor-9Yth)
-
-### 5.9 [daSubStatus枚举表](/zh/access/appendix?id=_3-dastatus的可能取值)
-
-### 5.10 [上线前检视清单](https://shimo.im/docs/B1Aw1QdNbRC2G2qm#anchor-Dy85)
-
-### 5.11 [国密版参考实现](https://shimo.im/docs/wV3VV8g0voTXj13y) -->
