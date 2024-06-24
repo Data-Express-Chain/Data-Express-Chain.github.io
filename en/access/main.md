@@ -132,11 +132,7 @@ public class DecsHashTool {
     }
 
     public static void main(String[] args) throws Exception {
-<<<<<<< HEAD
-        // 1. 
-=======
         // 1. get appKey
->>>>>>> 40ed950 (- Polish Grammar I)
         String appKey = "FcuMaP8q39Q4IigraXdDKpvaOhF2PqNptq86ZHYRvtMjAdVZIOSEfW4t6IdxUJu9";
 
         // 2. 
