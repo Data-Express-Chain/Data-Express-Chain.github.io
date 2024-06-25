@@ -6,9 +6,6 @@ Nowadays, it is difficult for individual users to effectively ensure the authent
 
 * Chiyu Banking
 * TaxPyament e-receipt
-* Shopee
-* BPJS
-* chsi
 
 ## Terminology
 
