@@ -5,7 +5,7 @@ Nowadays, it is difficult for individual users to effectively ensure the authent
 ## Data Source
 
 * Chiyu Banking
-* TaxPyament e-receipt
+* Tax Payment e-Receipt
 
 ## Terminology
 
