@@ -442,7 +442,7 @@ Note: Please contact your tech support for specific Service Provider Domain.
 | arg.ua                                        | String       | User agent of the user's terminal device, the purpose is to simulate the user's real mobile phone environment as much as possible, can be obtained from the front-end webview attribute. If it cannot be obtaineD, a fixed value can be passed.                                                                                                          | Y        |                                                        |
 | arg.width                                     | unsigned int | Terminal screen width (the width of the expected user's visible area), must be an integer                                                                                                                                                                                                                                                                | Y        |                                                        |
 | arg.height                                    | unsigned int | The height of the expected user's visible area (the height of the terminal screen, excluding the height of the top nav bar, bottom tab bar, etc.), must be an integer                                                                                                                                                                                    | Y        |                                                        |
-| arg.accessWay                                 | String       | Access method. Fill in "h5".                                                                                                                                                                                                                                                                                                                             | Y        |                                                        |
+| arg.accessWay                                 | String       | Access method, input "h5".                                                                                                                                                                                                                                                                                                                              | Y        |                                                        |
 | arg.ext                                       | Object       | Spare field, ext is an object for extension                                                                                                                                                                                                                                                                                                              | N        |                                                        |
 | arg.ext.attach                                | String       | Additional data, if passed in, this field will be carried in the ext of the backend notification data                                                                                                                                                                                                                                                    | N        | 128 characters (byte), note not 128 Chinese characters |
 | arg.ext.urlattach                             | String       | Additional field for callback URL. Used to carry additional parameters when returning from our authorization page to the integrator's HTML5 page. When the user returns from our authorization page to the integrator's HTML5 page after completing data fetching, the URL will carry this parameter: key is attach_url, value is the value passed here. | N        | 12 characters                                          |
@@ -588,7 +588,7 @@ public class CryptoTool {
 }
 ```
 
-#### 2.3.6 Return URL Handling
+#### 2.3.6 HTML5 callback URL handling
 
 * After the user completes the operation, the VDI page will open the integrator's result page and carry the parameters bizNo, daId, daStatus, site, and possibly attach_url and status.
 * Example of the result URL:
@@ -973,7 +973,7 @@ Another example with child sites:
 
 #### 2.7.1 API Description
 
-Every day at 3:30 AM, the end-of-day reconciliation bill of the system integrator dimension for the previous day is generated for downloading and reconciliation use.
+Every day at 3:30 AM, the reconciliation bill for the previous day is generated for downloading and reconciliation use. Every system integrator can have their own reconciliation bill.
 
 #### 2.7.2 API Path
 
@@ -1221,9 +1221,9 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 Whenever there is a change in the data fetching status, the System Integrator will be notified of the change in status.
 
 * Request URL: **Provided by the System Integrator**
-* Request Method: POST
+* Request Method: **POST**
 
-* Request Header: Content-Type: application/json
+* Request Header: **Content-Type: application/json**
 
 
 
