@@ -63,7 +63,7 @@ sortedJsonWithKey = sortedJson + "FcuMaP8q39Q4IigraXdDKpvaOhF2PqNptq86ZHYRvtMjAd
 decsHash = HMAC-SHA256("HmacSHA256", sortedJsonWithKey).toUpperCase() = "C3AF574420D41A7CEE9C44FCFC84FE15D36D5C97A80111278B82CCEAFCDC7C96";
 ```  
 
-#### 1.2.5 把哈希放入请求Header
+#### 1.2.5 请求头组装
 
 在HTTP Header里面加上字段 DECSHASH，值为上一步算出来的哈希  
 
