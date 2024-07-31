@@ -1,18 +1,14 @@
-## 1. Information Required from the System Integrator
+## 1. API Authentication Header
 
-Please Refer to the Corresponding H5 Integration Document.
+When calling **all APIs** in Chapter 2, it is **REQUIRED** to generate the authentication header using the method described in this chapter.
 
-## 2. Secure Login Authentication
+### 1.1 Notes
 
-When calling **all interfaces** in Chapter 3, it is **REQUIRED** to generate the authentication header using the method described in this chapter.
+* All openapi requests are **POST** requests, and the content-type is always **application/json**.
 
-### 2.1 Notes
+### 1.2 Header Generation
 
-* All openapi requests are POST requests, and the content-type is always application/json.
-
-### 2.2 Hash Algorithm
-
-#### 2.2.1 Generate JSON Based on the Required Parameters of the Interface Request
+#### 1.2.1 Parameters Preparation
 
 For example, the interface request parameters are as follows:
 
@@ -30,7 +26,7 @@ For example, the interface request parameters are as follows:
 }
 ```
 
-#### 2.2.2 Sort the Keys of the Request Parameters JSON String in ASCII Dictionary Order
+#### 1.2.2 Parameters Sorting
 
 Note that the request parameters JSON is generally a multi-level structure, each level needs to be sorted by key in ASCII dictionary order.
 For example, the sorted request parameters JSON are as follows:
@@ -49,7 +45,7 @@ For example, the sorted request parameters JSON are as follows:
 }
 ```
 
-#### 2.2.3 Serialize the JSON of the Request Parameters to a String
+#### 1.2.3 Parameters Serialization
 
 * Note: Remove all whitespace characters from the JSON string.
 
@@ -57,7 +53,7 @@ For example, the sorted request parameters JSON are as follows:
 {"arg":{"a":"xxx","b":"xxx"},"auth":{"appId":"IDAkEBvb","nonce":"20rr7wbca98e8325f0fjd77yl130j6hi"},"v":"1.0.0"}"
 ```
 
-#### 2.2.4 Calculate the Hash
+#### 1.2.4 Hash Calculation
 
 Append the appKey to the end of the sortedJson to get the sortedJsonWithKey string. Perform HMAC-SHA256 operation on sortedJsonWithKey (if needed, use the appKey as the key for the operation). Convert all characters of the resulting string to uppercase to get the unsignedData. Note: The length of the appKey is 64 bytes.
 
@@ -69,7 +65,7 @@ sortedJsonWithKey = sortedJson + "FcuMaP8q39Q4IigraXdDKpvaOhF2PqNptq86ZHYRvtMjAd
 decsHash = HMAC-SHA256("HmacSHA256", sortedJsonWithKey).toUpperCase() = "C3AF574420D41A7CEE9C44FCFC84FE15D36D5C97A80111278B82CCEAFCDC7C96";
 ```
 
-#### 2.2.5 Add the Hash to the Request Header
+#### 1.2.5 Append Hash to Request Header
 
 Add a field DECSHASH to the HTTP Header, with the value being the hash calculated in the previous step.
 
@@ -78,7 +74,7 @@ Map<String, String> header = new HashMap<>();
 header.put("DECSHASH", decsHash);
 ```
 
-#### 2.2.6 Full Example
+#### 1.2.6 Code Example
 
 ```java
 import com.fasterxml.jackson.databind.JsonNode;
@@ -149,37 +145,36 @@ public class DecsHashTool {
 }
 ```
 
-### 2.3 General Interface Error Code
+### 1.3 Error Codes of Authentication
 
-When calling any interface, there is a small chance that some common interface errors may occur, as follows:
+When calling authentication interface, there is a small chance that some common interface errors may occur, as follows:
 
 | Error Code | Error Message   | Description                                                         |
 | :--------- | :-------------- | :------------------------------------------------------------------ |
 | -48007     | ExternalLBError | External network redirect error (temporary), please try again later |
 | -50005     | SignInvalid     | DECSHASH calculation error                                          |
 
-## 3 Interface List
+## 2 API List
 
-### 3.1 Update AES Encryption Key Interface
+### 2.1 AES Key Updating
 
-When the System Integrator calls the related interfaces of the Clean Environment (or receives notifications), in order to protect the sensitive information of the System End-User (user agreement, user name, user ID number, user's Original-File URL) from leakage, these sensitive information need to be encrypted using the AES algorithm. To ensure the security of the encryption and decryption key, it is recommended that the System Integrator periodically calls this interface to update the AES encryption key (hereinafter referred to as aesKey) together with the Clean Environment System Provider.
+#### 2.1.1 Interface Description
+
+When the System Integrator calls the related interfaces of the trusted environment (or receives notifications), in order to protect the sensitive information of the System End-User (user agreement, user name, user ID number, user's Original-File URL) from leakage, these sensitive information need to be encrypted using the AES algorithm. To ensure the security of the encryption and decryption key, it is recommended that the System Integrator periodically calls this interface to update the AES encryption key (hereinafter referred to as aesKey) together with the trusted environment System Provider.
 
 **Note**:
 
 1. The frequency of updating the aesKey is controlled by the System Integrator. It is recommended to update it when the number of users is relatively small.
-2. During the process of updating the aesKey by the System Integrator, there may be a time difference between the System Integrator and the Clean Environment System Provider in saving and using the new aesKey. At the moment of updating, the aesKey used for encryption and decryption on both sides may be inconsistent. If this happens, the request will fail and a specific encryption or decryption failure error code will be received. It is recommended that the System Integrator resend the request upon receiving such error code to avoid this issue.
-3. If using National Encryption Suite, the returned aesKey is a symmetric encryption key of SM4. The SM4 algorithm uses ECB mode and P5 padding. For the following interfaces, both encryption and decryption need to use the SM4 algorithm instead of AES: start-vdi-x/start-vdi-miniapp-x/upload-user-protocol-x/get-original-files-x/get-parse-result-x/get-cert-result-x/sbox-white-list-x.
+2. During the process of updating the aesKey by the System Integrator, there may be a time difference between the System Integrator and the trusted environment System Provider in saving and using the new aesKey. At the moment of updating, the aesKey used for encryption and decryption on both sides may be inconsistent. If this happens, the request will fail and a specific encryption or decryption failure error code will be received. It is recommended that the System Integrator resend the request upon receiving such error code to avoid this issue.
 
-* Interface Call Method:
-
-| Interface Name                                                                                 | Method | Content-Type     |
+| API Path                                                                                       | Method | Content-Type     |
 | :--------------------------------------------------------------------------------------------- | :----- | :--------------- |
 | (Test Environment) https://testing-vdi.xxxx.xxx(System Provider Domain)/api/das/update-aes-key | POST   | application/json |
 | (Production Environment) https://vdi.xxxx.xxx(System Provider Domain)/api/das/update-aes-key   | POST   | application/json |
 
-Note: For the specific System Provider domain, please contact your Tech Support
+Note: For the specific System Provider domain, please contact your Tech Support.
 
-* Request:
+#### 2.1.2 Input Parameters
 
 | Parameter Name | Type   | Description                                                                                   | Required | Length |
 | :------------- | :----- | :-------------------------------------------------------------------------------------------- | :------- | :----- |
@@ -190,7 +185,7 @@ Note: For the specific System Provider domain, please contact your Tech Support
 | arg            | Object |                                                                                               | Y        |        |
 | arg.ext        | Object | Reserved field, ext is an object used for extension                                           | N        |        |
 
-* Request Parameter Example
+* Request Example
 
 ```json
 {
@@ -204,13 +199,16 @@ Note: For the specific System Provider domain, please contact your Tech Support
 }
 ```
 
-* Response Parameters| Parameter    | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Required |
-  | :----------- | :----- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
-  | errorCode    | int    | Return code: 0 for success, non-0 for failure                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Y        |
-  | errorMessage | String | Description of the result                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Y        |
-  | data         | Object | Return result (null if the call fails)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Y        |
-  | data.aeskey  | String | Generated by the Clean Environment System Provider, encrypted with the System Integrator's RSA public key (provided when applying for appId), and then Base64 encoded. After receiving it, the System Integrator needs to decode it with Base64 and then decrypt it with their own RSA private key.  | Y        |
-* Response Parameter Example
+#### 2.1.3 Output Parameters
+
+| Parameter    | Type   | Description                                                                                                                                                                                                                                                                                           | Required |
+| :----------- | :----- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
+| errorCode    | int    | Return code: 0 for success, non-0 for failure                                                                                                                                                                                                                                                         | Y        |
+| errorMessage | String | Description of the result                                                                                                                                                                                                                                                                             | Y        |
+| data         | Object | Return result (null if the call fails)                                                                                                                                                                                                                                                                | Y        |
+| data.aeskey  | String | Generated by the trusted environment System Provider, encrypted with the System Integrator's RSA public key (provided when applying for appId), and then Base64 encoded. After receiving it, the System Integrator needs to decode it with Base64 and then decrypt it with their own RSA private key. | Y        |
+
+* Response Example
 
 ```json
 {
@@ -222,7 +220,7 @@ Note: For the specific System Provider domain, please contact your Tech Support
 }
 ```
 
-#### 3.1.1 Example for Decoding the aeskey in response
+#### 2.1.4 Code Example
 
 Java:
 
@@ -282,75 +280,36 @@ Due to NodeJs's default encryption component `node-rsa` library, which uses pkcs
 
 For AES, use aes-128-ecb as default ciper
 
-<!-- ### 3.2 start-vdi-miniapp-x Interface (for accessway: miniapp)
+### 2.2 User Agreement Uploading
 
-* Interface Description:
+#### 2.2.1 Interface Description:
 
-Before redirecting to the Clean Environment, the System Integrator needs to call this interface to apply for a VDI machine. After a successful call, the backend will return some information for the System Integrator's miniapp to redirect to the Clean Environment Data Acquisition miniapp page.
+Before accessing the trusted environment officially, the System Integrator needs to prompt the System Provider's end user to sign a user agreement with the trusted environment service provider and upload it upon completion. **This interface can be called asynchronously**. If the call fails, it does not affect the mainstream process of user data fetching.
 
-* Note: If the user experience involves clicking a button that triggers the backend to call this interface, ensure proper interaction limitations to prevent users from quickly repeating clicks (which could prematurely end the data acquisition). The recommended experience is:
+| API Path                                                                                                | Method | Content-Type     |
+| :------------------------------------------------------------------------------------------------------ | :----- | :--------------- |
+| (Test Environment) https://testing-vdi.xxxx.xxx(Service Provider Domain)/api/das/upload-user-protocol-x | POST   | application/json |
+| (Production Environment) https://vdi.xxxx.xxx(Service Provider Domain)/api/das/upload-user-protocol-x   | POST   | application/json |
 
-  1. The user clicks the button.
-  2. The button shows a loading spinner (during which the button is disabled to prevent further clicks, **with a click frequency limit set**).
-  3. The backend of the System Integrator triggers the call to this interface (i.e., start-vdi-miniapp-x).
-  4. The interface request returns or times out.
-  5. The spinner stops. If the interface returns successfully, redirect to the Clean Environment miniapp; if the interface fails, display the corresponding error message.
-* Note: When using the Weixin Miniapp integration, it is recommended that the System Integrator implement necessary gray-scale release on the user side. After validating the production environment, then proceed to full-scale release. The gray-scale proportion of the miniapp, service number, and public account is controlled by the Weixin backend system. Therefore, setting the gray-scale proportion on the frontend can improve the system's stability threshold and prevent a system crash.
-* Interface Call Method:
+Note: For the specific Service Provider Domain, please contact your Tech Support.
 
-| Interface Name                                                                                      | Method | Content-Type     |
-| :-------------------------------------------------------------------------------------------------- | :----- | :--------------- |
-| (Testing Environment)  https://testing-vdi.`<System Provider Domain>`/api/das/start-vdi-miniapp-x | POST   | application/json |
-| (Production Environment)  https://vdi.`<System Provider Domain>`/api/das/start-vdi-miniapp-x      | POST   | application/json |
+#### 2.2.2 Input Parameters
 
-Note: For the specific System Provider domain, contact your Tech Support.
+| Parameter Name      | Type         | Description                                                                                                                                                                                                                                                                                                                   | Required | Length |
+| :------------------ | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :----- |
+| v                   | String       | Version number, default is 1.0.0                                                                                                                                                                                                                                                                                              | Y        | 8      |
+| auth                | Object       |                                                                                                                                                                                                                                                                                                                               | Y        |        |
+| auth.appId          | String       | Enter the pre-assigned appId                                                                                                                                                                                                                                                                                                  | Y        | 8      |
+| auth.nonce          | String       | 32-bit random string (a combination of letters and numbers), a different value must be passed each time the call is made                                                                                                                                                                                                      | Y        | 32     |
+| arg                 | Object       |                                                                                                                                                                                                                                                                                                                               | Y        |        |
+| arg.idNo            | String       | ID card number of the user using VDI.**The System Integrator needs to first validate the legality of the ID card number and reject requests that do not comply with the format and length of the ID card number.**  *Note: The System Integrator needs to encrypt this field using aesKey and then Base64 encode it.* | Y        |        |
+| arg.site            | String       | Data Source                                                                                                                                                                                                                                                                                                                   | Y        |        |
+| arg.files[]         | Object Array | Array of protocol files                                                                                                                                                                                                                                                                                                       | Y        |        |
+| arg.files[].name    | String       | File name                                                                                                                                                                                                                                                                                                                     | Y        |        |
+| arg.files[].content | String       | File content.*Note: Encrypt the file stream using aesKey, then Base64 encode the encrypted file stream.*                                                                                                                                                                                                                    | Y        |        |
+| arg.ext             | Object       | Reserved field, ext is an object for extension                                                                                                                                                                                                                                                                                | N        |        |
 
-* Request Param
-
-| Parameter Name                                | Type         | Description                                                                                                                                                                                                                                                                                                      | Required | Length Limit                                                       |
-| :-------------------------------------------- | :----------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :----------------------------------------------------------------- |
-| v                                             | String       | Version number, default is 1.0.0                                                                                                                                                                                                                                                                                 | Y        | 8                                                                  |
-| auth                                          | Object       |                                                                                                                                                                                                                                                                                                                  | Y        |                                                                    |
-| auth.appId                                    | String       | Pre-assigned appId                                                                                                                                                                                                                                                                                               | Y        | 32                                                                 |
-| auth.nonce                                    | String       | 32-character random string (letters and numbers), must be different for each call                                                                                                                                                                                                                                | Y        | 32                                                                 |
-| arg                                           | Object       |                                                                                                                                                                                                                                                                                                                  | Y        |                                                                    |
-| arg.bizScenario                               | String       | Business type, System Integrator should fill in "general"                                                                                                                                                                                                                                                        | Y        | 32                                                                 |
-| arg.site                                      | String       | Data Source of the user                                                                                                                                                                                                                                                                                          | Y        | 32                                                                 |
-| arg.bizNo                                     | String       | Business serial number. It is recommended to design a unified rule such as entry channel for future expansion                                                                                                                                                                                                    | Y        | 60                                                                 |
-| arg.openId                                    | String       | User identifier in the System Integrator, used to locate the user of this VDI session.*Note: The System Integrator needs to encrypt this field using aesKey and then encode it in Base64.*                                                                                                                     | Y        | 128                                                                |
-| arg.idNo                                      | String       | User's ID number.**The System Integrator must first verify the validity of the ID number and reject requests that do not match the ID number format and length.** Note: The System Integrator needs to encrypt this field using aesKey and then encode it in Base64.                                       | Y        |                                                                    |
-| arg.userName                                  | String       | Real name of the user after the System Integrator's KYC, displayed on our page.*Note: The System Integrator needs to encrypt this field using aesKey and then encode it in Base64.*                                                                                                                            | Y        |                                                                    |
-| arg.userClaim                                 | String       | A statement from the user, currently "This user has completed face verification/password verification/police/WeChat police identity verification".*Note: The business side fills in the text based on the actual verification method.*                                                                         | Y        | 128 characters (bytes), note that it is not 128 Chinese characters |
-| arg.width                                     | unsigned int | Phone screen width, must be an integer                                                                                                                                                                                                                                                                           | Y        |                                                                    |
-| arg.height                                    | unsigned int | Phone screen height, must be an integer                                                                                                                                                                                                                                                                          | Y        |                                                                    |
-| arg.accessWay                                 | String       | Possible accessWay values                                                                                                                                                                                                                                                                                        | Y        |                                                                    |
-| arg.ext                                       | Object       | Backup field, ext is an object used for expansion                                                                                                                                                                                                                                                                | N        |                                                                    |
-| arg.ext.attach                                | String       | Additional data. If passed, it will be included in the notification data's ext field                                                                                                                                                                                                                             | N        | 128 characters (bytes), note that it is not 128 Chinese characters |
-| arg.ext.urlattach                             | String       | Return URL additional field (only for h5 integration). Used to attach extra parameters when redirecting back to the frontend page of the System Integrator. Pass it in start-vdi, and after data acquisition is completed, the URL will carry this parameter: key is attach_url, value is the value passed here. | N        | 12 characters                                                      |
-| arg.ext.childSites                            | Array        | When arg.site is Alipay all-in-one, the values in the childSites array can only be selected from the following fields: [app-alipay-huabei, app-alipay-jiebei, app-alipay-cr, app-alipay-wsd]                                                                                                                     | N        |                                                                    |
-| arg.ext.tmriValidDays                         | Integer      | Valid days of safe driving records, must pass an integer between 1-90. If not passed or the value is not in the 1-90 range, it will be automatically set to the default value of 7.                                                                                                                              | N        | 1-90 integer                                                       |
-| arg.ext.companyFullName                       | String       | Organization name (only open for specific channels)                                                                                                                                                                                                                                                              | N        | 32 characters                                                      |
-| arg.ext.companyShortName                      | String       | Organization abbreviation (only open for specific channels)                                                                                                                                                                                                                                                      | N        | 32 characters                                                      |
-| arg.ext.contactInfo                           | String       | Contact information (only open for specific channels)                                                                                                                                                                                                                                                            | N        | 32 characters                                                      |
-| arg.ext.downloadAuthorizationSeparateDocument | String       | Separate download authorization text (only open for specific channels)                                                                                                                                                                                                                                           | N        | 128 characters                                                     |
-| arg.ext.downloadAuthorizationMergeDocument    | String       | Merged download authorization text (only open for specific channels)                                                                                                                                                                                                                                             | N        | 50 characters                                                      |
-
-**Remark 1：Getting Weixin Miniapp Resolution (arg.width and arg.height)：**
-
-Use **wx.getSystemInfo(Object object)** to get **windowWidth** and **windowHeight** and pass into start-vdi-miniapp API.
-
-```plain
-let windowWidth = 0
-let windowHeight = 0
-wx.getSystemInfo({
-  success: (result) => {
-    windowWidth = result.windowWidth
-    windowHeight = result.windowHeight
-  }
-})
-```
-
-* start-vdi-miniapp-x Request Parameter Example
+* Request Example
 
 ```json
 {
@@ -360,269 +319,137 @@ wx.getSystemInfo({
         "nonce": "RandomCode.getRandomString(32)"
     },
     "arg": {
-        "accessWay": "miniapp",
-        "bizScenario": "general",
-        "site": "tax",
-        "bizNo": "we1386584661349863900",
-        "openId": "YUIQMwxnnDCkcqxhkXKxfsonbNSlxK",
-        "idNo": "CgTQVFABGQMwxnnDCkcqxhkXKxfsonbNSlxK",
-        "userName": "IYTQMwxnnDCkcqxhkXKxfsonbNSlxK",
-        "userClaim": "User KYCed using Passport",
-        "ua": "xxxx",
-        "width": 750,
-        "height": 1334,
-        "ext": {
-            "unzipPassword": "123456"
-        }
+        "idNo": "UETETEooFDFEEFUFEFEFEFE",
+        "site": "xlcx",
+        "files": [
+            {
+                "name": "aaa.pdf",
+                "content": "MTIzNDU2Nzg5"
+            }
+        ]
     }
 }
 ```
 
-* Response Parameters:
+#### 2.2.3 Output Parameters
 
-| Parameter        | Type   | Description                                          | Required |
-| :--------------- | :----- | :--------------------------------------------------- | :------- |
-| errorCode        | int    | Result return code: 0 for success, non-0 for failure | Y        |
-| errorMessage     | String | Description of the return result                     | Y        |
-| data             | Object | Return result (if the call fails, return null)       | Y        |
-| data.daId        | String | Globally unique data acquisition request ID: daId    | Y        |
-| data.redirectUrl | String | URL for miniapp redirection                          | Y        |
-| data.mpAppId     | String | AppId of the miniapp to be redirected to             | N        |
+| Parameter    | Type    | Description                                       | Required |
+| :----------- | :------ | :------------------------------------------------ | :------- |
+| errorCode    | int     | Result return code: 0: Success, non-zero: Failure | Y        |
+| errorMessage | String  | Description of the return result                  | Y        |
+| data         | Object  | Return result (returns null if the call fails)    | Y        |
+| data.result  | boolean | File upload result                                | Y        |
 
-* Special Error Codes
+Special Error Codes
 
-| Error Code | Error Message                                 | Description                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| :--------- | :-------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| -43037     | AES_DECRYPT_EXCEPTION                         | AES decryption failed, please use the latest AES key                                                                                                                                                                                                                                                                                                                                                                                   |
-| -45001     | StartLockVMError                              | No available VDI machines, please try again later                                                                                                                                                                                                                                                                                                                                                                                      |
-| -45004     | StartVMError                                  | Temporary network error, please try again later                                                                                                                                                                                                                                                                                                                                                                                        |
-| -45027     | ExistingDownloadingDaTask                     | Current user has a data acquisition task downloading, please try again later                                                                                                                                                                                                                                                                                                                                                           |
-| -45030     | StartParamIdNoLessError                       | ID number indicates age less than 18                                                                                                                                                                                                                                                                                                                                                                                                   |
-| -45031     | StartParamIdNoError                           | ID number format error                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| -45028     | IdNoDailyRequestError                         | Daily access limit exceeded                                                                                                                                                                                                                                                                                                                                                                                                            |
-| -45032     | IdNoCurrentRequestError                       | User access too frequent, please try again later                                                                                                                                                                                                                                                                                                                                                                                       |
-| -48007     |                                               | Temporary network error                                                                                                                                                                                                                                                                                                                                                                                                                |
-| -48025     | DataSourceUnavailable                         | Current data type unavailable (critical!). When receiving this request, it is recommended to temporarily close the data type acquisition entry.**It is recommended that the System Integrator regularly call the [3.7 Interface](/en/access/main?id=_37-pull-interface-for-current-data-type-status) in this page.**                                                                                                                |
-| -50001     | Miniapp generic error after entry             | Troubleshoot based on the following:   - Check the sign algorithm and related code   - Check if the public/private key pair is configured correctly  - Check if the miniapp ID is correctly filled  - Check if the front-end specified envVersion is correct (release for production, trial for testing)  - Check if the appId is correctly filled during the redirection and matches the one used for generating the redirection link |
-| -50002     | SiteInvalid                                   | Data source not enabled, please contact your support                                                                                                                                                                                                                                                                                                                                                                                   |
-| -50006     | Sign calculation error after entering miniapp | Troubleshoot based on the following:   - Check if the miniapp is correctly redirected and if the envVersion is correctly set  - Check if the public key is correctly provided and configured  - Check if the public key works without issues in the testing environment                                                                                                                                                                |
+| Error Code       | Error Message         | Description                                          |
+| :--------------- | :-------------------- | :--------------------------------------------------- |
+| -43037 or -44050 | AES_DECRYPT_EXCEPTION | AES decryption failed, please use the latest AES key |
+
+* Response Parameters
 
 ```json
 {
     "errorCode": 0,
-    "errorMessage": "succ",
+    "errorMessage": "success",
     "data": {
-        "daId":"de1tuknz1500809629993668608",
-        "redirectUrl": "pages/vdi/vdi/?daId=de1tuknz1500809629993668608&vcode=vnLoTSazp7-n6W3vOtioPkU1RQHneTlrQ43Ii4QFVXg%3D&site=tax&appId=de3AtDFY&bizScenario=general&accessWay=miniapp&fullUrl=true",
-        "mpAppId": "wx73a4bdd6ff058974"
+        "result": true
     }
 }
 ```
 
-* Note: When the returned errorCode is 0, both daId and redirectUrl must not be empty to redirect to the Clean Environment Weixin Miniapp.
-* Note: The generated link is valid for 8 minutes (vcode expiration time). If not clicked within this time, it will prompt that it has expired; if clicked and entered for data acquisition, the operation timeout is 10 minutes for non-email mode and 60 minutes for email mode. If it times out, it will prompt that the link has expired.
-* Note: Regarding re-entry to this generated link: For security and anti-re-entry considerations, the generated link can only be used to create a login state once. This means that as long as the login state is maintained, the miniapp can be refreshed inside, and it can also be briefly sent to the background and brought back without affecting the current data acquisition. However, if the System End-User re-clicks the previous URL, it will cause the login state to be recreated, and it will feedback that the link has expired, requiring a new call to start-vdi.
-
-#### 3.2.1 How to Enter the Clean Environment's Weixin Miniapp
-
-#### 3.2.1.1 Generating Signature Field
-
-Using the private key from the RSA key pair generated by the System Integrator (the public key needs to be provided in advance), sign the `redirectUrl` in the returned parameters to obtain the `sign` field. Refer to the `sign` method for details:
-
-```java
-String sign = sign(redirectUrl, privateKey)；
-
-import java.security.PrivateKey;
-import java.security.Signature;
-import java.util.Base64;
-
-public class CryptoTool {
-    /**
-     * 
-     * @param plainText  
-     * @param privateKey 
-     * @return 
-     * @throws Exception
-     */
-    public static String sign(String plainText, PrivateKey privateKey) throws Exception {
-        Signature sig = Signature.getInstance("SHA256withRSA");
-        sig.initSign(privateKey);
-        sig.update(plainText.getBytes());
-        byte[] signatureBytes = sig.sign();
-        return Base64.getEncoder().encodeToString(signatureBytes);
-    }
-
-    /**
-     * 
-     * @param plainText 
-     * @param signature 
-     * @param publicKey 
-     * @return 
-     * @throws Exception
-     */
-      public static boolean verify(String plainText, String signature, PublicKey publicKey) throws Exception {
-        Signature sig = Signature.getInstance("SHA256withRSA");
-        sig.initVerify(publicKey);
-        sig.update(plainText.getBytes());
-        return sig.verify(Base64.getDecoder().decode(signature));
-    }
-}
-```
-
-#### 3.2.1.2 Generating Redirect Page Path
-
-* **Call `encodeURIComponent()` on the `sign` value to perform URI encoding; note that this method is in JavaScript, not Java. These two implementation methods are different! If you must use Java to encode, you can refer to our sample code.**
-* **Concatenate the `sign` parameter to our miniapp path to obtain the complete path for redirecting to our miniapp.**
-
-Sample code for concatenating the path is as follows:
-
-```java
-StringBuilder sb = new StringBuilder();
-sb.append(redirectUrl);
-sb.append("&")
-sb.append("sign=")
-sb.append(URIEncoder.encodeURIComponent(sign))
-path = sb.toString();
-
-public class URIEncoder {
-
-private static final String CHARSET = StandardCharsets.UTF_8.name();
-
-    private static final String[][] CHARACTERS = {
-        { "\\+", "%20" },
-        { "%21", "!"   },
-        { "%27", "'"   },
-        { "%28", "("   },
-        { "%29", ")"   },
-        { "%7E", "~"   }
-    };
-
-    public static String encodeURIComponent(String text) {
-        String result;
-        try {
-            result = URLEncoder.encode(text, CHARSET);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
-        for (String[] entry : CHARACTERS) {
-            result = result.replaceAll(entry[0], entry[1]);
-        }
-        return result;
-    }
-}
-
-```
-
-```plain
-pages/vdi/vdi/?daId=de1tuknz1500809629993668608&vcode=vnLoTSazp7-n6W3vOtioPkU1RQHneTlrQ43Ii4QFVXg%3D&site=tax&appId=de3AtDFY&bizScenario=general&accessWay=miniapp&fullUrl=true&sign=tR2vuBjqGasXKvXlP7wTjU5dL53iQU%2F9qeCjOepqTKoTv4RyO5dLIlvnyjRclOEY1j5lb1sBIkPd3C20IBSJDoz3%2BY9knNcBX0%2FCloNxAxnOsnCqtuNkferW%2BfZzbgOyGvTDEbZ%2Fmqe6BXco%2BOCyE%2FqNF0hAj7lMIn76Hb3IpzMz0%2FC0lg7rko3gm7JURB%2BQoKeTv3m7hGLXRSwjSsWZDOHNZSq5csn9Do1Q81FzoAmwJbXKkma0DzeyQvjYheGC%2BF2SrNe3NccXh59VTkCI%2FwykEp7Zl2XgHOPu8KLGrUN68b5QERlhOC9VSM8EueAOordlYHlW8Sy6JTWr%2FZEqxQ%3D%3D
-```
-
-#### 3.2.1.3 Entering the data acquisition Collection Page
-
-**I. If you are using accessWay as miniapp or miniappwithca:**
-
-You need to use the complete path and concatenated parameters obtained in step 3 to redirect to our miniapp data acquisition collection page. Please use this API from the Weixin SDK: https://developers.weixin.qq.com/miniprogram/dev/api/navigate/wx.navigateToMiniProgram.html
-
-* Our miniapp
-  * Original ID for the test environment miniapp (Cunzhengbao): gh_30e07f8dff2a
-    * AppId: **Use the `mpAppId` value returned by the start-vdi-miniapp-x interface**
-    * Also, specify: envVersion: 'trial'
-    * Also, provide the WeChat ID of the tester for enabling trial permissions
-  * **Original ID for the production environment miniapp: gh_0239e2817df3,** ***keep `envVersion` as release***
-
-**II. If you are using accessWay as weh52miniapp or weh52miniappwithca:**
-
-You need to integrate the Weixin JS SDK and use its built-in redirection method. In your public account configuration, redirect to enter the clean environment for data acquisition. You can contact us to obtain the demo code for Weixin H5 redirection.
-
-Note: **This method does not require setting `envVersion`**. Tencent officially restricts this method to only redirect to the release version of the miniapp.
-
-Note: The link used to launch the miniapp returned by start-vdi must be clicked to access the data acquisition within 8 minutes, otherwise, it will expire. If in the scenario of the integrator, users cannot click this link in time, it is recommended to regenerate the link for the user; a better solution is to direct the user's link to a H5 transit page of the partner, and then call start-vdi to generate the link and redirect for data acquisition on this page.
-
-#### 3.2.2 Handling of the Return Value after data acquisition Ends
-
-* To return to the source miniapp, the integrator's miniapp needs to use the Weixin Miniapp API to jump back from our miniapp to the original miniapp, and at the same time, use the global App.onShow to get the returned parameters (daId, site, daStatus, with the key as status) —— but the values of these parameters are not reliable (such as many times they may not be obtained). **You need to obtain accurate data acquisitionprocess status and results through receiving backend notifications (section 7.3) or polling data acquisition status (interface 3.8).**
-
-#### 3.2.3 Code Example for Symmetric Encryption of Parameter Fields
+#### 2.2.4 Code Example
 
 ```java
 @Test
-void testEncryptAes() throws Exception {
-    String base64AesKey = "2EdTm/RolkL0RjVBXhSAUA==";
-    SecretKey key = loadAesKey(base64AesKey);
-
-    String base64EncryptedValue = encryptAES("this is test string", key);
-    log.info("base64EncryptedValue:{}", base64EncryptedValue);
+void testEncyptFileContent() throws Exception{
+    File file = new File("D:\\user_proto.pdf");
+    String base64AesKey = "Ht6SPOmfGv6VjSo0Z5F3ng==";
+    byte[] fileBytes = FileUtils.readFileToByteArray(file);
+    SecretKey aesKey = loadAesKey(base64AesKey);
+    byte[] encryptedFileBytes = encryptAES(fileBytes, aesKey);
+    String base64encryptedFileStr = Base64.getEncoder().encodeToString(encryptedFileBytes);
+    log.info(base64encryptedFileStr);
 }
 
-public SecretKey loadAesKey(String base64Aeskey) {
-        byte[] bytes = Base64.getDecoder().decode(base64Aeskey);
-        SecretKey key = new SecretKeySpec(bytes, "AES");
-        return key;
+public byte[] encryptAES(byte[] bytes, SecretKey key) throws Exception {
+    Cipher cipher = Cipher.getInstance("AES");
+    cipher.init(Cipher.ENCRYPT_MODE, key);
+    byte[] encryptedBytes = cipher.doFinal(bytes);
+    return encryptedBytes;
 }
 
-public String encryptAES(String value, SecretKey key) throws Exception {
-        Cipher cipher = Cipher.getInstance("AES");
-        cipher.init(Cipher.ENCRYPT_MODE, key);
-        byte[] bytes = cipher.doFinal(value.getBytes(StandardCharsets.UTF_8));
-        String base64EncryptedValue = Base64.getEncoder().encodeToString(bytes);
-        return base64EncryptedValue;
+public SecretKey loadAesKey(String base64Aeskey) {
+    byte[] bytes = Base64.getDecoder().decode(base64Aeskey);
+    SecretKey key = new SecretKeySpec(bytes, "AES");
+    return key;
 }
-``` -->
+```
 
-### 3.3 start-vdi-x interface (for accessway: H5/SDK)
+If there are issues such as blank files, you can try local processing with the following code to see if you can restore 'base64encryptedFileStr' to the original PDF file.
 
-* Interface Description:
+```java
+byte[] encyptedBytes = Base64.getDecoder().decode(base64encryptedFileStr);
+Cipher cipher = Cipher.getInstance("AES");
+cipher.init(Cipher.DECRYPT_MODE, aesKey);
+byte[] decodedBytes = cipher.doFinal(encyptedBytes);
+String downloadFileSavePath = "D:\\save.pdf";
+FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
+```
 
-Before accessing the clean environment, the integrator needs to call this interface to request a VDI slot. After successful invocation, the backend will return a URL link for the integrator's frontend page to redirect to.
+### 2.3 Start Data Fetching
 
-* Note: If the user experience triggers the integrator's backend call to this interface by clicking a button, be sure to limit the interaction to prevent rapid repetitive clicks by users (rapid repetitive clicks will cause premature termination of user data acquisition). Recommended user experience is as follows:
+#### 2.3.1 Interface Description
+
+Before accessing the trusted environment, the integrator needs to call this interface to request a VDI slot. After successful invocation, the backend will return a URL link for the integrator's frontend page to redirect to.
+
+* Note: If the user experience triggers the integrator's backend call to this interface by clicking a button, be sure to limit the interaction to prevent rapid repetitive clicks by users (rapid repetitive clicks will cause premature termination of user data fetching). Recommended user experience is as follows:
 
   1. User clicks the button
   2. Button starts triggering animation (during animation triggering, user cannot click again)
   3. Trigger integrator's backend call to this interface (start-vdi-x)
   4. This interface request returns or times out
-  5. Stop triggering animation. If this interface returns successfully, redirect to the clean environment; if it fails, prompt the corresponding error.
-* Interface Invocation Method:
+  5. Stop triggering animation. If this interface returns successfully, redirect to the trusted environment; if it fails, show the corresponding error.
 
-| Interface Name                                                                                    | Method | Content-Type     |
-| :------------------------------------------------------------------------------------------------ | :----- | :--------------- |
-| (Testing Environment)  https://testing-vdi..xxxx.xxx(Service Provider Domain)/api/das/start-vdi-x | POST   | application/json |
-| (Production Environment)  https://vdi..xxxx.xxx(Service Provider Domain)/api/das/start-vdi-x      | POST   | application/json |
+| API Path                                                                                         | Method | Content-Type     |
+| :----------------------------------------------------------------------------------------------- | :----- | :--------------- |
+| (Testing Environment)  https://testing-vdi.xxxx.xxx(Service Provider Domain)/api/das/start-vdi-x | POST   | application/json |
+| (Production Environment)  https://vdi.xxxx.xxx(Service Provider Domain)/api/das/start-vdi-x      | POST   | application/json |
 
 Note: Please contact your tech support for specific Service Provider Domain.
 
-* Request Param
+#### 2.3.2 Input Parameters
 
-| Parameter Name                                | Type         | Description                                                                                                                                                                                                                                                                                                                                                                | Required | Length Limit                                           |
-| :-------------------------------------------- | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :----------------------------------------------------- |
-| v                                             | String       | Version number, default is 1.0.0                                                                                                                                                                                                                                                                                                                                           | Y        | 8                                                      |
-| auth                                          | Object       |                                                                                                                                                                                                                                                                                                                                                                            | Y        |                                                        |
-| auth.appId                                    | String       | Pass in the pre-assigned appId                                                                                                                                                                                                                                                                                                                                             | Y        | 8                                                      |
-| auth.nonce                                    | String       | 32-bit random string (random string composed of letters and numbers), different values must be passed each time it is called                                                                                                                                                                                                                                               | Y        | 32                                                     |
-| arg                                           | Object       |                                                                                                                                                                                                                                                                                                                                                                            | Y        |                                                        |
-| arg.bizScenario                               | String       | Business type, fill in general directly for integrators                                                                                                                                                                                                                                                                                                                    | Y        | 32                                                     |
-| arg.site                                      | String       | The data source                                                                                                                                                                                                                                                                                                                                                            | Y        | 32                                                     |
-| arg.bizNo                                     | String       | Business serial number. It is recommended to design a unified rule such as entry channel, etc., for easy expansion in the future                                                                                                                                                                                                                                           | Y        | 60                                                     |
-| arg.openId                                    | String       | Identity identifier of the user in the integrator, used to locate the user using VDI this time*Note: The integrator needs to encrypt this field using aesKey first, and then Base64 encode it.*                                                                                                                                                                          | Y        | 128                                                    |
-| arg.idNo                                      | String       | The ID card number of the user using VDI.**The integrator needs to validate the legality of the ID card number first and reject requests that do not conform to the format and length of the ID card number.**  *Note: The integrator needs to encrypt this field using aesKey first, and then Base64 encode it.*                                                  | Y        |                                                        |
-| arg.userName                                  | String       | The real name of the user after completing the KYC of the integrator, which will be displayed on our page.*Note: The integrator needs to encrypt this field using aesKey first, and then Base64 encode it.*                                                                                                                                                              | Y        |                                                        |
-| arg.userClaim                                 | String       | The text of the user's declaration, which is currently "The user has completed face recognition/password verification/public security/wechat police identity authentication".*Note: Business entities fill in the text according to the actual identity verification method.*                                                                                            | Y        | 128 characters (byte) Note: Not 128 Chinese characters |
-| arg.ua                                        | String       | User agent of the user's terminal device, the purpose is to simulate the user's real mobile phone environment as much as possible, can be obtained from the front-end webview attribute. If it cannot be obtained (such as in the H5 scenario), a fixed value can be passed.                                                                                               | Y        |                                                        |
-| arg.width                                     | unsigned int | Terminal screen width (the width of the expected user's visible area), must be an integer                                                                                                                                                                                                                                                                                  | Y        |                                                        |
-| arg.height                                    | unsigned int | The height of the expected user's visible area (the height of the terminal screen, excluding the height of the top nav bar, bottom tab bar, etc.), must be an integer                                                                                                                                                                                                      | Y        |                                                        |
-| arg.accessWay                                 | String       | Access method. Fill in "h5".                                                                                                                                                                                                                                                                                                                                               | Y        |                                                        |
-| arg.ext                                       | Object       | Spare field, ext is an object for extension                                                                                                                                                                                                                                                                                                                                | N        |                                                        |
-| arg.ext.attach                                | String       | Additional data, if passed in, this field will be carried in the ext of the backend notification data                                                                                                                                                                                                                                                                      | N        | 128 characters (byte), note not 128 Chinese characters |
-| arg.ext.urlattach                             | String       | Additional field for callback URL (only for H5 access). Used to carry additional parameters when returning from our authorization page to the integrator's H5 page. When the user returns from our authorization page to the integrator's H5 page after completing data acquisition, the URL will carry this parameter: key is attach_url, value is the value passed here. | N        | 12 characters                                          |
-| arg.ext.childSites                            | Array        | Child Sites information                                                                                                                                                                                                                                                                                                                                                    | N        |                                                        |
-| arg.ext.tmriValidDays                         | Integer      | The number of days the secure driving record is valid, needs to be an integer value between 1-90. If not passed or passed value is not in the range of 1-90, the default value of 7 will be automatically set                                                                                                                                                              | N        | Integer value between 1-90                             |
-| arg.ext.companyFullName                       | String       | Organization name (only open to specific channels)                                                                                                                                                                                                                                                                                                                         | N        | 32 characters                                          |
-| arg.ext.companyShortName                      | String       | Organization abbreviation (only open to specific channels)                                                                                                                                                                                                                                                                                                                 | N        | 32 characters                                          |
-| arg.ext.contactInfo                           | String       | Contact information (only open to specific channels)                                                                                                                                                                                                                                                                                                                       | N        | 32 characters                                          |
-| arg.ext.downloadAuthorizationSeparateDocument | String       | Download authorization separate document (only open to specific channels)                                                                                                                                                                                                                                                                                                  | N        | 128 characters                                         |
-| arg.ext.downloadAuthorizationMergeDocument    | String       | Download authorization merge document (only open to specific channels)                                                                                                                                                                                                                                                                                                     | N        | 50 characters                                          |
+| Parameter Name                                | Type         | Description                                                                                                                                                                                                                                                                                                                                                             | Required | Length Limit                                           |
+| :-------------------------------------------- | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :----------------------------------------------------- |
+| v                                             | String       | Version number, default is 1.0.0                                                                                                                                                                                                                                                                                                                                        | Y        | 8                                                      |
+| auth                                          | Object       |                                                                                                                                                                                                                                                                                                                                                                         | Y        |                                                        |
+| auth.appId                                    | String       | Pass in the pre-assigned appId                                                                                                                                                                                                                                                                                                                                          | Y        | 8                                                      |
+| auth.nonce                                    | String       | 32-bit random string (random string composed of letters and numbers), different values must be passed each time it is called                                                                                                                                                                                                                                            | Y        | 32                                                     |
+| arg                                           | Object       |                                                                                                                                                                                                                                                                                                                                                                         | Y        |                                                        |
+| arg.bizScenario                               | String       | Business type, fill in general directly for integrators                                                                                                                                                                                                                                                                                                                 | Y        | 32                                                     |
+| arg.site                                      | String       | The data source                                                                                                                                                                                                                                                                                                                                                         | Y        | 32                                                     |
+| arg.bizNo                                     | String       | Business serial number. It is recommended to design a unified rule such as entry channel, etc., for easy expansion in the future                                                                                                                                                                                                                                        | Y        | 60                                                     |
+| arg.openId                                    | String       | Identity identifier of the user in the integrator, used to locate the user using VDI this time*Note: The integrator needs to encrypt this field using aesKey first, and then Base64 encode it.*                                                                                                                                                                       | Y        | 128                                                    |
+| arg.idNo                                      | String       | The ID card number of the user using VDI.**The integrator needs to validate the legality of the ID card number first and reject requests that do not conform to the format and length of the ID card number.**  *Note: The integrator needs to encrypt this field using aesKey first, and then Base64 encode it.*                                               | Y        |                                                        |
+| arg.userName                                  | String       | The real name of the user after completing the KYC of the integrator, which will be displayed on our page.*Note: The integrator needs to encrypt this field using aesKey first, and then Base64 encode it.*                                                                                                                                                           | Y        |                                                        |
+| arg.userClaim                                 | String       | The text of the user's declaration, which is currently "The user has completed face recognition/password verification/public security/wechat police identity authentication".*Note: Business entities fill in the text according to the actual identity verification method.*                                                                                         | Y        | 128 characters (byte) Note: Not 128 Chinese characters |
+| arg.ua                                        | String       | User agent of the user's terminal device, the purpose is to simulate the user's real mobile phone environment as much as possible, can be obtained from the front-end webview attribute. If it cannot be obtaineD, a fixed value can be passed.                                                                                            | Y        |                                                        |
+| arg.width                                     | unsigned int | Terminal screen width (the width of the expected user's visible area), must be an integer                                                                                                                                                                                                                                                                               | Y        |                                                        |
+| arg.height                                    | unsigned int | The height of the expected user's visible area (the height of the terminal screen, excluding the height of the top nav bar, bottom tab bar, etc.), must be an integer                                                                                                                                                                                                   | Y        |                                                        |
+| arg.accessWay                                 | String       | Access method. Fill in "h5".                                                                                                                                                                                                                                                                                                                                            | Y        |                                                        |
+| arg.ext                                       | Object       | Spare field, ext is an object for extension                                                                                                                                                                                                                                                                                                                             | N        |                                                        |
+| arg.ext.attach                                | String       | Additional data, if passed in, this field will be carried in the ext of the backend notification data                                                                                                                                                                                                                                                                   | N        | 128 characters (byte), note not 128 Chinese characters |
+| arg.ext.urlattach                             | String       | Additional field for callback URL. Used to carry additional parameters when returning from our authorization page to the integrator's HTML5 page. When the user returns from our authorization page to the integrator's HTML5 page after completing data fetching, the URL will carry this parameter: key is attach_url, value is the value passed here. | N        | 12 characters                                          |
+| arg.ext.childSites                            | Array        | Child Sites information                                                                                                                                                                                                                                                                                                                                                 | N        |                                                        |
+| arg.ext.tmriValidDays                         | Integer      | The number of days the secure driving record is valid, needs to be an integer value between 1-90. If not passed or passed value is not in the range of 1-90, the default value of 7 will be automatically set                                                                                                                                                           | N        | Integer value between 1-90                             |
+| arg.ext.companyFullName                       | String       | Organization name (only open to specific channels)                                                                                                                                                                                                                                                                                                                      | N        | 32 characters                                          |
+| arg.ext.companyShortName                      | String       | Organization abbreviation (only open to specific channels)                                                                                                                                                                                                                                                                                                              | N        | 32 characters                                          |
+| arg.ext.contactInfo                           | String       | Contact information (only open to specific channels)                                                                                                                                                                                                                                                                                                                    | N        | 32 characters                                          |
+| arg.ext.downloadAuthorizationSeparateDocument | String       | Download authorization separate document (only open to specific channels)                                                                                                                                                                                                                                                                                               | N        | 128 characters                                         |
+| arg.ext.downloadAuthorizationMergeDocument    | String       | Download authorization merge document (only open to specific channels)                                                                                                                                                                                                                                                                                                  | N        | 50 characters                                          |
 
-* Request Param Example
+* Request Example
 
 ```json
 {
@@ -649,33 +476,33 @@ Note: Please contact your tech support for specific Service Provider Domain.
 }
 ```
 
-* Response Param
+#### 2.3.3 Output Parameters
 
 | Parameter        | Type   | Description                                               | Required |
 | :--------------- | :----- | :-------------------------------------------------------- | :------- |
 | errorCode        | int    | The return code of the result: 0: success, non-0: failure | Y        |
 | errorMessage     | String | Description of the return result                          | Y        |
 | data             | Object | Return result (null if the call fails)                    | Y        |
-| data.daId        | String | The globally unique data acquisition serial ID: daId      | Y        |
+| data.daId        | String | The globally unique data fetching serial ID: daId         | Y        |
 | data.redirectUrl | String | The page for accessing VDI                                | Y        |
 
 * Special Error Codes
 
-| ErrorCode | ErrorMessage              | Description                                                                                                                                                                                                                            |
-| :-------- | :------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| -43037    | AES_DECRYPT_EXCEPTION     | AES decryption failed, please use the latest AES key                                                                                                                                                                                   |
-| -45001    | StartLockVMError          | No available VDI slots, please try again later                                                                                                                                                                                         |
-| -45004    | StartVMError              | Temporary network error, please try again later                                                                                                                                                                                        |
-| -45027    | ExistingDownloadingDaTask | The current user already has a data acquisition task in progress, please try again later                                                                                                                                               |
-| -45030    | StartParamIdNoLessError   | ID card number is less than 18 years old                                                                                                                                                                                               |
-| -45031    | StartParamIdNoError       | Incorrect format of ID card number                                                                                                                                                                                                     |
-| -45028    | IdNoDailyRequestError     | Exceeded the total number of visits for the day                                                                                                                                                                                        |
-| -45032    | IdNoCurrentRequestError   | User access is too frequent, please try again later                                                                                                                                                                                    |
-| -48007    |                           | Temporary network error                                                                                                                                                                                                                |
-| -48025    | DataSourceUnavailable     | The current data type is unavailable (serious!). When receiving this request, please temporarily close the data type access. It is recommended that the integrator regularly call interface 3.7 to fetch the current data type status. |
-| -50002    | SiteInvalid               | Data source not enabled, please contact your tech support                                                                                                                                                                              |
+| ErrorCode | ErrorMessage              | Description                                                                                                                                                                                                            |
+| :-------- | :------------------------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| -43037    | AES_DECRYPT_EXCEPTION     | AES decryption failed, please use the latest AES key                                                                                                                                                                   |
+| -45001    | StartLockVMError          | No available VDI slots, please try again later                                                                                                                                                                         |
+| -45004    | StartVMError              | Temporary network error, please try again later                                                                                                                                                                        |
+| -45027    | ExistingDownloadingDaTask | The current user already has a data fetching task in progress, please try again later                                                                                                                                  |
+| -45030    | StartParamIdNoLessError   | ID card number is less than 18 years old                                                                                                                                                                               |
+| -45031    | StartParamIdNoError       | Incorrect format of ID card number                                                                                                                                                                                     |
+| -45028    | IdNoDailyRequestError     | Exceeded the total number of visits for the day                                                                                                                                                                        |
+| -45032    | IdNoCurrentRequestError   | User access is too frequent, please try again later                                                                                                                                                                    |
+| -48007    |                           | Temporary network error                                                                                                                                                                                                |
+| -48025    | DataSourceUnavailable     | The current data source is unavailable (serious!). When receiving this request, please temporarily close the data source access. It is recommended that the integrator regularly fetch the current data source status. |
+| -50002    | SiteInvalid               | Data source not enabled, please contact your tech support                                                                                                                                                              |
 
-* Response Parameter Example
+* Response Example
 
 ```json
 {
@@ -683,21 +510,21 @@ Note: Please contact your tech support for specific Service Provider Domain.
     "errorMessage": "succ",
     "data": {
         "daId":"de1tuknz1500809629993668608",
-        "redirectUrl": "https://testing-vdi.<Service Provider Domain>/vdi/vdi.html?daId=de1tuknz1500809629993668608&vcode=A86uXkYbIEwuFnr2y0ibZ9qjBGC3-X0D5HJKiylEMwA=&site=chsi&bizScenario=general&appId=de1tuknz&accessWay=sdk&fullUrl=true"
+        "redirectUrl": "https://testing-vdi.<Service Provider Domain>/vdi/vdi.html?daId=de1tuknz1500809629993668608&vcode=A86uXkYbIEwuFnr2y0ibZ9qjBGC3-X0D5HJKiylEMwA=&site=chsi&bizScenario=general&appId=de1tuknz&accessWay=h5&fullUrl=true"
     }
 }
 ```
 
 Note: The generated link is valid for 8 minutes (expiration time of vcode). If it is not clicked to enter within this time, it will expire. If clicked and entered, the operation timeout is 10 minutes. If timed out, it will prompt that the link has expired.
 
-Note: Regarding re-entry to this link: For security and prevention of re-entry, the generated link can only be used to generate a login state once, meaning as long as the login state is maintained, it can be refreshed in the webview or suspended (such as pulling down to the bottom right corner in H5 mode within the WeChat ecosystem), or switched to the background, all without affecting the current data acquisition. However, if the integrator's user clicks the URL again to enter, it will cause the login state to be rebuilt, and at this time, it will prompt that the link has expired, and start-vdi needs to be called again.
+Note: Regarding re-entry to this link: For security and prevention of re-entry, the generated link can only be used to generate a login state once, meaning as long as the login state is maintained, it can be refreshed in the webview or suspended, or switched to the background, all without affecting the current data fetching. However, if the integrator's user clicks the URL again to enter, it will cause the login state to be rebuilt, and at this time, it will prompt that the link has expired, and start-vdi needs to be called again.
 
-Note: If accessing through H5 within the app, and the data source type that needs to be integrated requires face recognition (such as housing fund), please pay attention to the following points:
+Note: If accessing through HTML5 within the app, and the data source type that needs to be integrated requires face recognition (such as housing fund), please pay attention to the following points:
 
 * Your app needs to have already requested camera permissions;
 * If your app is an Android version, it needs to be able to respond to webview's camera activation request. If your app has not implemented this function yet, we can provide sample reference code.
 
-#### 3.3.1 How to redirect to and load the returned URL
+#### 2.3.4 Trusted Environment URL Generation
 
 1. Sign the `redirectUrl` in the returned parameters using the private key of the RSA key pair generated by the integrator itself (the public key needs to be provided to us in advance), and obtain the `sign` field.
 
@@ -705,17 +532,17 @@ Note: If accessing through H5 within the app, and the data source type that need
 String sign = sign(redirectUrl, privateKey)；
 ```
 
-2. Generate the complete URL to enter the VDI page:
+2. Generate the full URL to enter the VDI page:
 
 - Concatenate the generated signature after the redirectUrl. Example:
 
 ```plain
-https://testing-vdi.<Service Provider Domain>/vdi/vdi.html?daId=de1tuknz1500809629993668608&vcode=A86uXkYbIEwuFnr2y0ibZ9qjBGC3-X0D5HJKiylEMwA=&site=chsi&bizScenario=general&appId=de1tuknz&accessWay=sdk&fullUrl=true&sign=mGXan8cwSEpdoQaYU/wHD+Pos4Kxi+7NlLKvm3EcYaqUu8aJGqpgmmtfJqYSzhqhyPZw19iMGn16G9dd5ZzsYC3fNXYTRcn2jOmlFAPWGmi04WZGZUMt9d6uQy3Yfmlf7OLCFMFXDAFubv6QStuVegLYuBA2kdc4iMpqHcEOtT1YyL4fTepJRSiMQA21i+NE6Y8oxOaPj+qW7vl9RpK1dOxkio6eb6/c22IGVapwXHrKsOp1RoS+nO2ddk1MKFTYI9xsrPkry5LL2GCL80DEhinQ5uc90bgwd7Rh8tDm3qjxVdtVPZxAO2Bdic+4YGwJzoCyJ82NNf0dpmIzBbDgRw==
+https://testing-vdi.<Service Provider Domain>/vdi/vdi.html?daId=de1tuknz1500809629993668608&vcode=A86uXkYbIEwuFnr2y0ibZ9qjBGC3-X0D5HJKiylEMwA=&site=chsi&bizScenario=general&appId=de1tuknz&accessWay=h5&fullUrl=true&sign=mGXan8cwSEpdoQaYU/wHD+Pos4Kxi+7NlLKvm3EcYaqUu8aJGqpgmmtfJqYSzhqhyPZw19iMGn16G9dd5ZzsYC3fNXYTRcn2jOmlFAPWGmi04WZGZUMt9d6uQy3Yfmlf7OLCFMFXDAFubv6QStuVegLYuBA2kdc4iMpqHcEOtT1YyL4fTepJRSiMQA21i+NE6Y8oxOaPj+qW7vl9RpK1dOxkio6eb6/c22IGVapwXHrKsOp1RoS+nO2ddk1MKFTYI9xsrPkry5LL2GCL80DEhinQ5uc90bgwd7Rh8tDm3qjxVdtVPZxAO2Bdic+4YGwJzoCyJ82NNf0dpmIzBbDgRw==
 ```
 
-3. Load the URL
+3. Open the URL
 
-* Simply Load this concatenated URL in your WebView container
+* Open this concatenated URL in your WebView container
 
 4. Example
 
@@ -756,7 +583,7 @@ public class CryptoTool {
 }
 ```
 
-#### 3.3.2 Handling of Data Acquisition Completion Return Values
+#### 2.3.5 Return Values Handling
 
 * After the user completes the operation, the VDI page will open the integrator's result page and carry the parameters bizNo, daId, daStatus, site, and possibly attach_url and status.
 * Example of the result URL:
@@ -765,7 +592,7 @@ public class CryptoTool {
 https://www.yyy.com/jumpChannel.html?attach_url=channel_a&bizNo=acf1700443444e7b9206c6d5b36ec955&daId=zd240e1e1722158295759228928&site=app-tax-income&daStatus=10
 ```
 
-#### 3.3.3 Example Code for Encrypting Parameters Before Calling
+#### 2.3.6 Code Example to encrypt parameters
 
 ```
 @Test
@@ -792,146 +619,22 @@ public String encryptAES(String value, SecretKey key) throws Exception {
 }
 ```
 
-### 3.4 User Agreement Signing Interface
+### 2.4 Original File Downloading
 
-* Interface Description:
+#### 2.4.1 Interface Description
 
-Before accessing the clean environment officially, the System Integrator needs to prompt the System Provider's end user to sign a user agreement with the clean environment service provider and upload it upon completion.**For this interface, it is not necessary to call in scenarios where miniappwithca and fullminiapp are used for access.****This interface can be called asynchronously. If the call fails, it does not affect the mainstream process of user data acquisition.**
-
-* Agreement Requirements:
-
-1) When the user selects to submit the corresponding data type (site) in the interface, the corresponding agreement template should be used for signature (we provide a template, only the **Chinese name of the data type** changes according to the **site**, others remain consistent), and it should be in PDF format. The content to be replaced is in green (replaced twice throughout the document). The correspondence between the Chinese name of the data type and the site can be found in Appendix Chapter Two, the last column of the English values.
-2) The current user's name and ID card number (plaintext) should be dynamically written in the space for name and ID card number at the beginning of the document.
-3) At the end of the document, use CA signature (call the System Integrator to provide electronic signature to the end user), and add the date.
-4) After signing, upload the signed PDF file through the 3.4 interface each time it is called.Note: The agreement can be reused, based on the user's ID card number (idNo) + data type (site) dimension. For example: If Zhang San retrieves data type A, one agreement can be signed, but each time Zhang San submits A, this agreement needs to be sent through the interface.
-5) The agreement needs to be sent before the user operation is completed to ensure timely receipt of notifications and timely pulling of data acquisition files.
-   Attention: **According to business requirements, each System Integrator must ensure that each user, and each data type requested by the user, uploads a user agreement, otherwise we reserve the right to suspend services**.
-
-* Interface Invocation Method:
-
-| Interface Name                                                                                          | Method | Content-Type     |
-| :------------------------------------------------------------------------------------------------------ | :----- | :--------------- |
-| (Test Environment) https://testing-vdi.xxxx.xxx(Service Provider Domain)/api/das/upload-user-protocol-x | POST   | application/json |
-| (Production Environment) https://vdi.xxxx.xxx(Service Provider Domain)/api/das/upload-user-protocol-x   | POST   | application/json |
-
-Note: For the specific Service Provider Domain, please contact your Tech Support for assistance.
-
-* Request:
-
-| Parameter Name      | Type         | Description                                                                                                                                                                                                                                                                                                                   | Required | Length |
-| :------------------ | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :----- |
-| v                   | String       | Version number, default is 1.0.0                                                                                                                                                                                                                                                                                              | Y        | 8      |
-| auth                | Object       |                                                                                                                                                                                                                                                                                                                               | Y        |        |
-| auth.appId          | String       | Enter the pre-assigned appId                                                                                                                                                                                                                                                                                                  | Y        | 8      |
-| auth.nonce          | String       | 32-bit random string (a combination of letters and numbers), a different value must be passed each time the call is made                                                                                                                                                                                                      | Y        | 32     |
-| arg                 | Object       |                                                                                                                                                                                                                                                                                                                               | Y        |        |
-| arg.idNo            | String       | ID card number of the user using VDI.**The System Integrator needs to first validate the legality of the ID card number and reject requests that do not comply with the format and length of the ID card number.**  *Note: The System Integrator needs to encrypt this field using aesKey and then Base64 encode it.* | Y        |        |
-| arg.site            | String       | Data Source                                                                                                                                                                                                                                                                                                                   | Y        |        |
-| arg.files[]         | Object Array | Array of protocol files                                                                                                                                                                                                                                                                                                       | Y        |        |
-| arg.files[].name    | String       | File name                                                                                                                                                                                                                                                                                                                     | Y        |        |
-| arg.files[].content | String       | File content.*Note: Encrypt the file stream using aesKey, then Base64 encode the encrypted file stream.*                                                                                                                                                                                                                    | Y        |        |
-| arg.ext             | Object       | Reserved field, ext is an object for extension                                                                                                                                                                                                                                                                                | N        |        |
-
-* Request
-
-```json
-{
-    "v": "1.0.0",
-    "auth": {
-        "appId": "appid1",
-        "nonce": "RandomCode.getRandomString(32)"
-    },
-    "arg": {
-        "idNo": "UETETEooFDFEEFUFEFEFEFE",
-        "site": "xlcx",
-        "files": [
-            {
-                "name": "aaa.pdf",
-                "content": "MTIzNDU2Nzg5"
-            }
-        ]
-    }
-}
-```
-
-* Response| Parameter    | Type    | Description                                       | Required |
-  | :----------- | :------ | :------------------------------------------------ | :------- |
-  | errorCode    | int     | Result return code: 0: Success, non-zero: Failure | Y        |
-  | errorMessage | String  | Description of the return result                  | Y        |
-  | data         | Object  | Return result (returns null if the call fails)    | Y        |
-  | data.result  | boolean | File upload result                                | Y        |
-* Special Error Codes
-
-| Error Code       | Error Message         | Description                                          |
-| :--------------- | :-------------------- | :--------------------------------------------------- |
-| -43037 or -44050 | AES_DECRYPT_EXCEPTION | AES decryption failed, please use the latest AES key |
-
-* Example of Return Parameters
-
-```json
-{
-    "errorCode": 0,
-    "errorMessage": "success",
-    "data": {
-        "result": true
-    }
-}
-```
-
-#### 3.4.1 Code Example for Encrypting the 'file content' Field of the Request
-
-```java
-@Test
-void testEncyptFileContent() throws Exception{
-    File file = new File("D:\\user_proto.pdf");
-    String base64AesKey = "Ht6SPOmfGv6VjSo0Z5F3ng==";
-    byte[] fileBytes = FileUtils.readFileToByteArray(file);
-    SecretKey aesKey = loadAesKey(base64AesKey);
-    byte[] encryptedFileBytes = encryptAES(fileBytes, aesKey);
-    String base64encryptedFileStr = Base64.getEncoder().encodeToString(encryptedFileBytes);
-    log.info(base64encryptedFileStr);
-}
-
-public byte[] encryptAES(byte[] bytes, SecretKey key) throws Exception {
-    Cipher cipher = Cipher.getInstance("AES");
-    cipher.init(Cipher.ENCRYPT_MODE, key);
-    byte[] encryptedBytes = cipher.doFinal(bytes);
-    return encryptedBytes;
-}
-
-public SecretKey loadAesKey(String base64Aeskey) {
-    byte[] bytes = Base64.getDecoder().decode(base64Aeskey);
-    SecretKey key = new SecretKeySpec(bytes, "AES");
-    return key;
-}
-```
-
-If there are issues such as blank files, you can try local processing with the following code to see if you can restore 'base64encryptedFileStr' to the original PDF file.
-
-```java
-byte[] encyptedBytes = Base64.getDecoder().decode(base64encryptedFileStr);
-Cipher cipher = Cipher.getInstance("AES");
-cipher.init(Cipher.DECRYPT_MODE, aesKey);
-byte[] decodedBytes = cipher.doFinal(encyptedBytes);
-String downloadFileSavePath = "D:\\save.pdf";
-FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
-```
-
-### 3.5 System Integrator Pulling original data File Interface
-
-Through this interface, retrieve the files downloaded by the end user from our backend in the current data acquisition session. Only files within 10 days of data acquisition (including original data & parsing results) are supported for retrieval. Please pull the files into the database promptly.
+Through this interface, retrieve the files downloaded by the end user from our backend in the current data fetching session. Only files within 10 days of data fetching (including original data & parsing results) are supported for retrieval. Please pull the files into the database promptly.
 
 * The download link will expire in 5 minutes
-* Interface Invocation Method:
 
-| Interface Name                                                               | Method | Content-Type     |
+| API Path                                                                     | Method | Content-Type     |
 | :--------------------------------------------------------------------------- | :----- | :--------------- |
 | (Test Environment) https://testing-vdi.xxxx.xxx/api/efp/get-original-files-x | POST   | application/json |
 | (Production Environment) https://vdi.xxxx.xxx/api/efp/get-original-files-x   | POST   | application/json |
 
 Note: Please contact your Tech Support to obtain the specific Service Provider Domain.
 
-* Request:
+#### 2.4.2 Input Parameters
 
 | Parameter Name | Type   | Description                                                                                                              | Required | Length |
 | :------------- | :----- | :----------------------------------------------------------------------------------------------------------------------- | :------- | :----- |
@@ -943,44 +646,37 @@ Note: Please contact your Tech Support to obtain the specific Service Provider D
 | arg.daId       | String | data aquisition ID                                                                                                       | Y        | 32     |
 | arg.ext        | Object | Reserved field, ext is an object for extension                                                                           | N        |        |
 
-* Return Parameters:
+#### 2.4.3 Output Parameters
 
-| Parameter                        | Type   | Description                                                                                                                                                                                                                                                                                                                                           | Field Always Exists |
-| :------------------------------- | :----- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------ |
-| errorCode                        | int    | Result return code: 0: Success, non-zero: Failure (0 only represents the success of this request, no backend service error, does not represent the success of data acquisition; specifically,**if the user-signed agreement certificate file sent by the System Integrator has not been received yet, a specific error code will be returned**) | Y                   |
-| errorMessage                     | String | Description of the return result                                                                                                                                                                                                                                                                                                                      | Y                   |
-| data                             | Object |                                                                                                                                                                                                                                                                                                                                                       | Object              |
-| data.daId                        | String | data aquisition ID                                                                                                                                                                                                                                                                                                                                    | string              |
-| data.bizNo                       | String | Business-level transaction number (not returned in the case of fullminiapp)                                                                                                                                                                                                                                                                           | Y                   |
-| data.fileUrl                     | Array  | URL of the downloaded source file, it is an array indicating that there may be multiple files (pdf, csv, or xls, etc.). If data acquisition fails, this array is empty*Note: Upon receiving this field, the System Integrator needs to first decode it using Base64, then decrypt it using aesKey.*                                                 | Y                   |
-| data.site                        | String | Data type accessed by the user:[possible values for site](/en/access/appendix?id=_2-supported-data-types-site)                                                                                                                                                                                                                                           | Y                   |
-| data.ext                         | Object | Reserved field, ext is an object for extension                                                                                                                                                                                                                                                                                                        | N                   |
-| data.ext.fileKey                 | String | Key for decrypting file download*Note: Upon receiving this field, the System Integrator needs to first decode it using Base64, then decrypt it using aesKey.*                                                                                                                                                                                       | N                   |
-| data.ext.pdfPassword             | Array  | PDF password (returned only if it is not the last 6 digits of the ID card and has a PDF password)*Note: Upon receiving this field, the System Integrator needs to first decode it using Base64, then decrypt it using aesKey.*                                                                                                                      | N                   |
-| data.ext.companyId               | String | Only present when the user accesses a WeChat payment merchant, representing the social credit code of the merchant (business license registration code)                                                                                                                                                                                               | Optional            |
-| data.ext.companyName             | String | Only present when the user accesses a WeChat payment merchant, representing the merchant name                                                                                                                                                                                                                                                         | Optional            |
-| data.ext.dl                      | Array  | Download status of files, only present when the site is a WeChat payment merchant, it is an array                                                                                                                                                                                                                                                     | Optional            |
-| data.ext.dl[].fileName           | String |                                                                                                                                                                                                                                                                                                                                                       | Optional            |
-| data.ext.dl[].**dlResult** | String | Specific file download status (possible values below)                                                                                                                                                                                                                                                                                                 | Optional            |
-| data.ext.dl[].**type**     | String | One of the bill types (possible values below)                                                                                                                                                                                                                                                                                                         | Optional            |
-| data.ext.fileTypeMapping         | Map    | When the user accesses a WeChat payment merchant, it is the file index and file type dictionary (deprecated)                                                                                                                                                                                                                                          | Optional            |
+| Parameter            | Type   | Description                                                                                                                                                                                                                                                                                                                                        | Field Always Exists |
+| :------------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------ |
+| errorCode            | int    | Result return code: 0: Success, non-zero: Failure (0 only represents the success of this request, no backend service error, does not represent the success of data fetching; specifically,**if the user-signed agreement certificate file sent by the System Integrator has not been received yet, a specific error code will be returned**) | Y                   |
+| errorMessage         | String | Description of the return result                                                                                                                                                                                                                                                                                                                   | Y                   |
+| data                 | Object |                                                                                                                                                                                                                                                                                                                                                    | Object              |
+| data.daId            | String | data aquisition ID                                                                                                                                                                                                                                                                                                                                 | string              |
+| data.bizNo           | String | Business-level transaction number (not returned in the case of fullminiapp)                                                                                                                                                                                                                                                                        | Y                   |
+| data.fileUrl         | Array  | URL of the downloaded source file, it is an array indicating that there may be multiple files (pdf, csv, or xls, etc.). If data fetching fails, this array is empty*Note: Upon receiving this field, the System Integrator needs to first decode it using Base64, then decrypt it using aesKey.*                                                 | Y                   |
+| data.site            | String | data source accessed by the user:[possible values for site](/en/access/appendix?id=_2-supported-data-types-site)                                                                                                                                                                                                                                      | Y                   |
+| data.ext             | Object | Reserved field, ext is an object for extension                                                                                                                                                                                                                                                                                                     | N                   |
+| data.ext.fileKey     | String | Key for decrypting file download*Note: Upon receiving this field, the System Integrator needs to first decode it using Base64, then decrypt it using aesKey.*                                                                                                                                                                                    | N                   |
+| data.ext.pdfPassword | Array  | PDF password (returned only if it is not the last 6 digits of the ID card and has a PDF password) *Note: Upon receiving this field, the System Integrator needs to first decode it using Base64, then decrypt it using aesKey.*                                                                                                                 | N                   |
 
 * errorCode (Special Error Codes)
 
-| Error Code | Error Message                        | Description                           | Is Error Code Final     |
-| :--------- | :----------------------------------- | :------------------------------------ | :---------------------- |
-| 0          |                                      | Success                               | Final                   |
-| -44028     | DA_NOT_AUTHORIZED_EXCEPTION          | User is not authorized                | Non-final, needs retry  |
-| -44017     | NOT_RECEIVED_USER_PROTOCOL_EXCEPTION | User agreement not received           | Non-final, needs retry  |
-| -44062     | DA_IN_PROGRESS_EXCEPTION             | data acquisition is still in progress | Non-final, needs retry  |
-| -44021     | DA_FAILED_EXCEPTION                  | data acquisition failed for this case | Final, no need to retry |
+| Error Code | Error Message                        | Description                        | Is Error Code Final     |
+| :--------- | :----------------------------------- | :--------------------------------- | :---------------------- |
+| 0          |                                      | Success                            | Final                   |
+| -44028     | DA_NOT_AUTHORIZED_EXCEPTION          | User is not authorized             | Non-final, needs retry  |
+| -44017     | NOT_RECEIVED_USER_PROTOCOL_EXCEPTION | User agreement not received        | Non-final, needs retry  |
+| -44062     | DA_IN_PROGRESS_EXCEPTION             | data fetching is still in progress | Non-final, needs retry  |
+| -44021     | DA_FAILED_EXCEPTION                  | data fetching failed for this case | Final, no need to retry |
 
 **Note:**
 
-1. For some data types such as Postal Savings Bank and Bank of China, the 'fileUrl' field returned by this interface will contain two or more URLs, so the System Integrator needs to download and process multiple URLs of this type of data.
+1. For some data sources, the 'fileUrl' field returned by this interface will contain two or more URLs, so the System Integrator needs to download and process multiple URLs of this type of data.
 2. The URL returned by the interface invocation is valid for 5 minutes, so the file download must be completed within 5 minutes. If it expires, you can call this interface again to get a new URL.
 
-* Response
+* Response Example
 
 ```json
 {
@@ -1001,7 +697,7 @@ Note: Please contact your Tech Support to obtain the specific Service Provider D
 }
 ```
 
-#### 3.5.1 Example to decrypt the reponse
+#### 2.4.4 Code Example to decrypt reponse
 
 ```java
 @Test
@@ -1029,9 +725,9 @@ public String decryptAes(String base64EncryptedValue, SecretKey key) throws Exce
 }
 ```
 
-#### 3.5.2 Downloading files after decoding fileUrl and fileKey
+#### 2.4.5 Code Example to download files
 
-The Cloud storage service configuration of the clean environment backend uses server-side encryption for file storage, so that the 'fileKey' field in the interface response will not be empty. It needs to be decrypted into a base64 key using the method above, and used together with the decrypted 'fileUrl' to download the file with the following code. The difference from normal file download is that the header is set with three additional parameters for file download decryption.
+The Cloud storage service configuration of the trusted environment backend uses server-side encryption for file storage, so that the 'fileKey' field in the interface response will not be empty. It needs to be decrypted into a base64 key using the method above, and used together with the decrypted 'fileUrl' to download the file with the following code. The difference from normal file download is that the header is set with three additional parameters for file download decryption.
 
 ```java
 @Test
@@ -1052,112 +748,28 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```
 
-<!-- 
-### 3.6 System Integrator Pulling "Evidence Certificate" Interface
 
-#### 3.6.1 Interface Description
+### 2.5 Data Source Availability
 
-* Through this interface, pull the download address of the evidence certificate for the current data acquisition from the backend.
-* The download link will expire in 5 minutesNote: Starting from August 21, 2023, with the continuous increase in business volume, to ensure the quality and efficiency of querying data, only files within 10 days of data acquisition (including original evidence, parsing results, and evidence certificates) are supported for retrieval. Please pull the files into the database promptly.
-* **The System Integrator needs to download and decrypt the parsing result JSON in the same way as in 3.5.1 and 3.5.2**
-* Interface Invocation Method:
+#### 2.5.1 Interface Description
 
-| Interface Name                                                                                     | Method | Content-Type     |
-| :------------------------------------------------------------------------------------------------- | :----- | :--------------- |
-| (Test Environment) https://testing-vdi.xxxx.com(Service Provider Domain)/api/efp/get-cert-result-x | POST   | application/json |
-| (Production Environment) https://vdi.xxxx.com(Service Provider Domain)/api/efp/get-cert-result-x   | POST   | application/json |
+Through this interface, you can pull the running status of specific data sources. [Important]
 
-Note: Please contact your Tech Support to obtain the specific Service Provider Domain.
+Note: Due to possible maintenance/upgrades of the data official website, resulting in short-term unavailability, this interface is used for the business party to regularly obtain the available status of the corresponding data source. Suggestions:
 
-* Request:
+1. **Regularly pull the available status of data sources via scheduled tasks (cronjob) and save this status**, preferably every 5 minutes. If there is a large number of users, the frequency can be increased.
+2. **Based on the locally saved site availability status, control the display/hide of corresponding site user entry points on the business entry page using switches**.
 
-| Parameter Name | Type   | Description                                                                                                              | Required | Length Limit |
-| :------------- | :----- | :----------------------------------------------------------------------------------------------------------------------- | :------- | :----------- |
-| v              | String | Version number, default is 1.0.0                                                                                         | Y        | 8            |
-| auth           | Object |                                                                                                                          | Y        |              |
-| auth.appId     | String | Enter the pre-assigned appId                                                                                             | Y        | 8            |
-| auth.nonce     | String | 32-bit random string (a combination of letters and numbers), a different value must be passed each time the call is made | Y        | 32           |
-| arg            | Object |                                                                                                                          | Y        |              |
-| arg.daId       | String | data acquisition ID                                                                                                      | Y        | 32           |
-| arg.ext        | Object | Reserved field, ext is an object for extension                                                                           | N        |              |
-
-* Return Parameters
-
-| Parameter          | Type    | Description                                                                                                                                                                                                                        | Required |  |
-| :----------------- | :------ | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :- |
-| errorCode          | int     | Return code: 0 success, non-zero failure (0 only represents the success of this request and there is no backend service error, does not represent the success of business logic)                                                   | Y        |  |
-| errorMessage       | String  | Description of the return result                                                                                                                                                                                                   | Y        |  |
-| data               | Object  |                                                                                                                                                                                                                                    | Y        |  |
-| data.daId          | String  | data aquisition ID                                                                                                                                                                                                                 | Y        |  |
-| data.bizNo         | String  | Business-level transaction number (not returned in the case of fullminiapp)                                                                                                                                                        | Y        |  |
-| data.certResult    | Integer | Result of evidence certificate generation (success or failure, possible values below)                                                                                                                                              | Y        |  |
-| data.certFileUrl[] | Array   | List of evidence certificates, an array, each element is a download URL for an evidence certificate*Note: Upon receiving this field, the System Integrator needs to first decode it using Base64, then decrypt it using aesKey.* | Y        |  |
-| data.ext           | String  | Reserved field, ext is an object for extension                                                                                                                                                                                     | N        |  |
-| data.ext.fileKey   | String  | Key for decrypting file download*Note: Upon receiving this field, the System Integrator needs to first decode it using Base64, then decrypt it using aesKey.*                                                                    | N        |  |
-
-* errorCode
-
-| Error Code    | Error Message                        | Description                                                                                                             | Is Error Code Final     |
-| :------------ | :----------------------------------- | :---------------------------------------------------------------------------------------------------------------------- | :---------------------- |
-| 0             |                                      | Success                                                                                                                 | Final                   |
-| -44009 -43024 | NO_DB_RECORD_EXCEPTION               | daId does not exist                                                                                                     | Non-final, needs retry  |
-| -44028        | DA_NOT_AUTHORIZED_EXCEPTION          | User is not authorized, so the System Integrator cannot pull the user's data aquisition files and evidence certificates | Non-final, needs retry  |
-| -44017        | NOT_RECEIVED_USER_PROTOCOL_EXCEPTION | User agreement not received                                                                                             | Non-final, needs retry  |
-| -44007        | GET_EVIDENCE_DETAILS_EXCEPTYION      | Not successfully on the chain, this error only affects the pulling of the evidence certificate interface                | Non-final, needs retry  |
-| -44062        | DA_IN_PROGRESS_EXCEPTION             | data acquisition is still in progress                                                                                   | Non-final, needs retry  |
-| -44021        | DA_FAILED_EXCEPTION                  | data acquisition failed for this case                                                                                   | Final, no need to retry |
-
-#### 3.6.2 Possible Values of certResult
-
-| Possible Value | Description                                 |
-| :------------- | :------------------------------------------ |
-| 5              | Evidence certificate not generated          |
-| 10             | Evidence certificate generated successfully |
-| 100            | Evidence certificate failed to generate     |
-
-* Return Parameters
-
-```json
-{
-    "data": {
-        "daId": "de1uahd81493120767678877696",
-        "bizNo": "Acf5EBaefB9ErFWPHz",
-        "certResult": 10,
-        "certFileUrl": [
-            "ZjkJD3UrtkM8EOr70OrCJJhnZ9qU7//Og5cuKQldauVSvJPDlH4z85jKHlz2HVuJMr4PhXlcch5T5ZwCbkRgKAg9BRxpaQ9Yb77U9j730tq1L+OGW85FR3/5cXDuVPLEaTtGFWwprVuT8+sWDGX2IHAX1lFtUwaDiFyknTI+wU7FE7Afcl8b09m63PumFPWsl/kqeQIDpNk7o8TzGQpGojFDA2FJf7ksGPaYEdBtEoea8roSTFM4QoayC6ZcSMU0fcnWC59A3dfNgllEp0zK3UsCl4v3HJxLIlliVcMwN0vrfsAPb768wI6oycS3mhpSIM+M1l4N/4nctLKkE0LNn9YP0ODeJTbEnZ2lzjzMHUrOohwCJx5NYsevuBjHSuIj2UZgvqx01sG7xQi6V2GrrLXqvAG7zn6cGN3pHEoy3Ctf6FyeErLmtGNosmTL4ewCmD8ANk6I+eZKPt6KEJ2b0hBtIgnPGDcG4iwYCr+zOhkFjEmf25oDC3lYZtVrDa8ZcpE39tnR9RvqyD0k3lScHiTVQP6Tyl6GQIe9v1zGpkmqfeO/16gfuDu2xQiShr/Vz8wKl3zyaaKG3dD7lmTBubdiijN+GDhZPCL1GlgUPxWyHh8V1EYk1GIEB9q0Ql4trlXCbnEVv32hGPRTc51LxdXKK72WEMWx/+DEUAjvsKZ+YqDSq6KIgAPyl9xv5jRPL2cuczpv6gw6DYpjvFa7C47/9Vx6LC4PZvXRbz7XITs="
-        ],
-        "ext": {
-            "fileKey": "7pfdqjwnUAy2GZXHy02Pdxz2S6wZEp1U7wOzycwmoorRI4nkTz5jC+dXK6ORRuLS"
-        }
-    },
-    "errorCode": 0,
-    "errorMessage": "success"
-}
-```
-
-**Attention:**
-
-1. **For certain data types, the 'fileUrl' field returned by this interface may contain two or more URLs. Therefore, the System Integrator needs to download and process multiple URLs for such data types when calling the interface.**
-2. **The URL returned upon successful invocation of the interface is valid for 5 minutes. Therefore, file downloads must be completed within 5 minutes. If the URL expires, you can call this interface again to get a new URL.**
-   Note: Starting from August 21, 2023, with the continuous increase in business volume, to ensure the quality and efficiency of data retrieval, only files within 10 days of data acquisition (including original data, parsing results, and evidence certificates) are supported for retrieval. Please pull the files and store them into the database promptly; files older than 10 days need to be regularly processed in batches by the Clean Environment backend service provider. -->
-
-### 3.7 Pull Interface for Current Data Type Status
-
-* Description: **Through this interface, you can pull the running status of specific data types. [Important]**
-* Due to possible maintenance/upgrades of the data official website, resulting in short-term unavailability, this interface is used for the business party to regularly obtain the available status of the corresponding data type. Suggestions for the business party:
-
-  1. **Regularly pull the available status of data types via scheduled tasks (cronjob) and save this status**, preferably every 5 minutes. If there is a large number of users, the frequency can be increased.
-  2. **Based on the locally saved site availability status, control the display/hide of corresponding site user entry points on the business entry page using switches**.
-* Interface Call Method:
-
-| Interface Name                                                                                       | Method | Content-Type     |
+| API Path                                                                                             | Method | Content-Type     |
 | :--------------------------------------------------------------------------------------------------- | :----- | :--------------- |
 | (Test Environment)  https://testing-vdi.xxxx.xxx(Service Provider Domain)/api/config/get-sites-state | POST   | application/json |
 | (Production Environment)  https://vdi.xxxx.xxx(Service Provider Domain)/api/config/get-sites-state   | POST   | application/json |
 
 Note: Please contact your tech support to obtain the specific service provider domain.
 
-* Request:
+
+
+#### 2.5.2 Input Parameters
 
 | Parameter Name | Type   | Description                                                                                                      | Required | Length Limit |
 | :------------- | :----- | :--------------------------------------------------------------------------------------------------------------- | :------- | :----------- |
@@ -1166,10 +778,10 @@ Note: Please contact your tech support to obtain the specific service provider d
 | auth.appId     | String | Pass in the pre-allocated appId                                                                                  | Y        | 8            |
 | auth.nonce     | String | 32-character random string (a combination of letters and numbers), different values must be passed for each call | Y        | 32           |
 | arg            | Object |                                                                                                                  | Y        |              |
-| arg.sites      | Array  | Status of the required data types, array, pass in all data types that need to be pulled for status               | Y        |              |
+| arg.sites      | Array  | Status of the required data sources, array, pass in all data sources that need to be pulled for status           | Y        |              |
 | arg.ext        | Object | Reserve field, ext is an object used for extension                                                               | N        |              |
 
-* Request Example:
+* Request Example
 
 ```json
 {
@@ -1184,7 +796,9 @@ Note: Please contact your tech support to obtain the specific service provider d
 }
 ```
 
-* Return Parameters
+
+
+#### 2.5.3 Output Parameters
 
 | Parameter        | Type   | Description                                                                                                                                                                                  | Required |
 | :--------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
@@ -1192,8 +806,8 @@ Note: Please contact your tech support to obtain the specific service provider d
 | errorMessage     | String | Return result description                                                                                                                                                                    | Y        |
 | data             | Array  |                                                                                                                                                                                              | Y        |
 | data.status      | Array  | 1 means available, 0 means unavailable                                                                                                                                                       | Y        |
-| data.site        | Array  | Data type name                                                                                                                                                                               | Y        |
-| data.description | Array  | Data type description                                                                                                                                                                        | Y        |
+| data.site        | Array  | data source name                                                                                                                                                                             | Y        |
+| data.description | Array  | data source description                                                                                                                                                                      | Y        |
 
 * Return Example
 
@@ -1216,19 +830,25 @@ Note: Please contact your tech support to obtain the specific service provider d
 }
 ```
 
-### 3.8 Retrieving Data Acquisition Status
 
-* Description: This interface allows retrieving the operational status of a specific data acquisition business.
-* Interface Invocation:
 
-| Interface Name                                                                                  | Method | Content-Type     |
+### 2.6 Data Fetching Status
+
+#### 2.6.1 Interface Description
+
+This interface allows retrieving the status of a specific data fetching request.
+
+
+| API Path                                                                                        | Method | Content-Type     |
 | :---------------------------------------------------------------------------------------------- | :----- | :--------------- |
 | (Test Environment)  https://testing-vdi.xxxx.xxx(Service Provider Domain)/api/das/get-da-status | POST   | application/json |
 | (Production Environment)  https://vdi.xxxx.xxx(Service Provider Domain)/api/das/get-da-status   | POST   | application/json |
 
 Note: Please contact your integration colleague to obtain the specific service provider domain.
 
-* Request:
+
+
+#### 2.6.2 Input Parameters
 
 | Parameter Name | Type   | Description                                                                                                                | Required | Length Limitation |
 | :------------- | :----- | :------------------------------------------------------------------------------------------------------------------------- | :------- | :---------------- |
@@ -1255,7 +875,9 @@ Note: Please contact your integration colleague to obtain the specific service p
 }
 ```
 
-* Return Parameters:
+
+
+#### 2.6.3 Output Parameters
 
 | Parameter            | Type   | Description                                                                                                                                                                                                                                                                                                                                                   | Required |
 | :------------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------- |
@@ -1264,7 +886,7 @@ Note: Please contact your integration colleague to obtain the specific service p
 | data                 | Object |                                                                                                                                                                                                                                                                                                                                                               | Y        |
 | data.daStatus        | int    | Status value of the VDI machine occupied by the user, see details:[possible values of daStatus](/en/access/appendix?id=_3-possible-values-of-dastatus). If the user exits the VDI during the file download process, it is impossible to enter another VDI until the download task is completed, and a new VDI can only be opened after the download is complete. | Y        |
 | data.browsingSite    | String | User access site                                                                                                                                                                                                                                                                                                                                              | Y        |
-| data.daId            | String | Data acquisition ID                                                                                                                                                                                                                                                                                                                                           | Y        |
+| data.daId            | String | data fetching ID                                                                                                                                                                                                                                                                                                                                              | Y        |
 | data.bizNo           | String | Integration partner serial number                                                                                                                                                                                                                                                                                                                             | Y        |
 | data.jsonResult      | Int    | File parsing status                                                                                                                                                                                                                                                                                                                                           | Y        |
 | data.certResult      | Int    | Evidence certificate status (No longer usable)                                                                                                                                                                                                                                                                                                                | Y        |
@@ -1344,70 +966,23 @@ Another example with child sites:
 }
 ```
 
-<!-- ### 3.9 Setting the Whitelist for Users Allowed to Enter the Clean Environment
 
-* Description: When users of the system integrator directly rely on the QR code of the clean environment backend service provider to enter the clean environment, they can set the whitelist of users who can use the clean environment through this interface.
-* This interface is only required to be called when the system integrator accesses using a standalone Weixin Miniapp.
-* Interface Calling Method:
 
-| Interface Name                                                                                         | Method | Content-Type     |
-| :----------------------------------------------------------------------------------------------------- | :----- | :--------------- |
-| (Testing Environment) https://testing-vdi.xxxx.xxx(Service Provider Domain)/api/admin/sbox-whitelist-x | POST   | application/json |
-| (Production Environment) https://vdi.xxxx.xxx(Service Provider Domain)/api/admin/sbox-whitelist-x      | POST   | application/json |
+### 2.7 Daily Bill
 
-Note: Please contact your tech support to obtain the specific service domain.
+#### 2.7.1 Interface Description
 
-* Request:
+Every day at 3:30 AM, the end-of-day reconciliation bill of the system integrator dimension for the previous day is generated for downloading and reconciliation use. 
 
-| Parameter         | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                  | Required | Length Limit |
-| :---------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :----------- |
-| v                 | String | Version number, default is 1.0.0                                                                                                                                                                                                                                                                                                                                                                                                             | Y        | 8            |
-| auth              | Object |                                                                                                                                                                                                                                                                                                                                                                                                                                              | Y        |              |
-| auth.appId        | String | Pre-allocated appId                                                                                                                                                                                                                                                                                                                                                                                                                          | Y        | 8            |
-| auth.nonce        | String | 32-bit random string (combination of letters and numbers), a different value must be passed each time the call is made                                                                                                                                                                                                                                                                                                                       | Y        | 32           |
-| arg               | Object |                                                                                                                                                                                                                                                                                                                                                                                                                                              | Y        |              |
-| arg.wl            | Array  |                                                                                                                                                                                                                                                                                                                                                                                                                                              | Y        |              |
-| arg.wl[].idNo     | String | ID card number of the user using the VDI.**The system integrator needs to first validate the legality of the ID card number and reject requests that do not comply with the format and length of the ID card number.**  *Note: The system integrator needs to encrypt this field using aesKey and then Base64 encode it.*                                                                                                            | Y        |              |
-| arg.wl[].userId   | String | The ID representing this user set by the system integrator for this user, used to match this user; the system integrator ensures that userId can be uniquely mapped to the ID card number of this user, because the ID card number will not be returned in the notify notification, only this userId will be returned for matching users.*Note: The system integrator needs to encrypt this field using aesKey and then Base64 encode it.* | Y        | 64           |
-| arg.wl[].userName | String | The real name of the user after the system integrator KYC, displayed on the clean environment page. Needs to be encrypted using aesKey.*Note: The system integrator needs to encrypt this field using aesKey and then Base64 encode it.*                                                                                                                                                                                                   | Y        |              |
-| arg.wl[].action   | String | "add" indicates adding to the whitelist (returning an error if already exists); "del" indicates deleting from the whitelist;                                                                                                                                                                                                                                                                                                                 | Y        |              |
-| arg.wl[].sites    | Array  | Currently unused                                                                                                                                                                                                                                                                                                                                                                                                                             | Y        |              |
-
-* Return Parameters:
-
-| Parameter    | Type   | Description                                                                                                                                                                                                                                                                                                                                                                         | Required |
-| :----------- | :----- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
-| errorCode    | int    | Return code: 0 for success, non-0 for failure.   -53022 idNo already exists during addition.   -53028 userId already exists during addition.   -53023 idNo does not exist during deletion.   Note: This interface checks before execution. If the return code is not 0, all additions and deletions will not be executed, and the request content needs to be modified and retried. | Y        |
-| errorMessage | String | Description of the returned result. If the addition or deletion fails, it will return which item failed. If the ID card number does not exist, it returns userId; otherwise, it returns the ID card number.                                                                                                                                                                         | Y        |
-
-* Return Example
-
-```json
-{
-    "errorCode": 0,
-    "errorMessage": "success"
-}
-{
-    "data": null,
-    "errorCode": -53022,
-    "errorMessage": "421181198908185818 idNo已存在，请核查!"
-}
-``` -->
-
-### 3.10 System Integrator Dimension End-of-Day Reconciliation Statement Retrieval Interface
-
-Description: Every day at 3:30 AM, the end-of-day reconciliation statement of the system integrator dimension for the previous day is generated for downloading and reconciliation use. The reconciliation statement interface is crucial.
-
-Interface Calling Method:
-
-| Interface Name                                                                                                                                         | Method | Content-Type     |
+| API Path                                                                                                                                               | Method | Content-Type     |
 | :----------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :--------------- |
 | (Testing Environment)[https://testing-vdi.xxxx.xxx(Service Provider Domain)/api/efp/get-recon-file](https://testing-vdi.zdgzc.com/api/efp/get-recon-file) | POST   | application/json |
 | (Production Environment)[https://vdi.xxxx.xxx(Service Provider Domain)/api/efp/get-recon-file](https://vdi.zdgzc.com/api/efp/get-recon-file)              | POST   | application/json |
 
 Note: Please contact your tech support to obtain the specific service domain.
 
-* Request:
+
+#### 2.7.2 Input Parameters
 
 | Parameter  | Type   | Description                                                                                                            | Required | Length Limit |
 | :--------- | :----- | :--------------------------------------------------------------------------------------------------------------------- | :------- | :----------- |
@@ -1418,7 +993,7 @@ Note: Please contact your tech support to obtain the specific service domain.
 | arg        | Object |                                                                                                                        | Y        |              |
 | arg.date   | String | Date, format is yyyymmdd, for example: 20220801, here you need to pass the reconciliation date of T-1                  | Y        | 8            |
 
-* Request
+* Request Example
 
 ```json
 {
@@ -1433,7 +1008,9 @@ Note: Please contact your tech support to obtain the specific service domain.
 }
 ```
 
-* Return Parameters:
+
+
+#### 2.7.3 Output Parameters
 
 | Parameter    | Type   | Description                                   | Required |
 | :----------- | :----- | :-------------------------------------------- | :------- |
@@ -1454,9 +1031,9 @@ Note: Please contact your tech support to obtain the specific service domain.
 }
 ```
 
-**Explanation:**
+**Downloaded Bill Format:**
 
-1. This interface retrieves a CSV file containing all transaction details of an access party for the previous day (T-1).
+1. This interface retrieves a CSV file containing all transaction details of an system integrator for the previous day (T-1).
 2. To download this file, no fileKey is required. Directly use HTTP GET for download. The link is valid for 5 minutes. If you are unable to download within 5 minutes, you need to re-call this interface to get a new link.
 3. The CSV file contains the following fields:
 
@@ -1465,8 +1042,8 @@ Note: Please contact your tech support to obtain the specific service domain.
 | da_id                     | ID of the acquisition, which can uniquely identify an acquisition record                                                                 |
 | biz_no                    | Third-party business serial number                                                                                                       |
 | app_id                    | AppID pre-assigned for access to the data express chain                                                                                  |
-| site                      | Actual data type acquired                                                                                                                |
-| original_site             | The original data type of the acquisition (Not usable)                                                                                   |
+| site                      | Actual data source acquired                                                                                                              |
+| original_site             | The original data source of the acquisition (Not usable)                                                                                 |
 | access_way                | Access mode                                                                                                                              |
 | da_status                 | Acquisition status code                                                                                                                  |
 | da_sub_status             | Acquisition sub-status code                                                                                                              |
@@ -1478,7 +1055,23 @@ Note: Please contact your tech support to obtain the specific service domain.
 | user_protocol_upload_flag | Y means user agreement uploaded, N means not uploaded                                                                                    |
 | create_time               | Time of acquisition order creation                                                                                                       |
 
-### 3.11 Access Party Pulls "Parsed-Original-File" Interface
+### 2.8 Parsed File Downloading
+
+
+#### 2.8.1 Interface Description
+
+This interface is used to pull the result (success or failure) of the current acquisition from the backend, along with the structured data download URL of the parsed file (if available).
+
+* The download URL expires in 5 minutes.
+* **The system integrator needs to download and decrypt the parsing results in the same way as 3.5.1 and 3.5.2.** Only files within 10 days of acquisition (including acquisition original text, parsing results, and custody certificates) are supported for retrieval. Please retrieve files promptly for storage.
+
+
+| API Path                                                                      | Method | Content-Type     |
+| :---------------------------------------------------------------------------- | :----- | :--------------- |
+| (Testing Environment) https://testing-vdi.xxxx.xxx/api/efp/get-parse-result-x | POST   | application/json |
+| (Production Environment) https://vdi.xxxx.xxx/api/efp/get-parse-result-x      | POST   | application/json |
+
+Note: Please contact your integration partner to obtain the specific service provider domain.
 
 Note:
 
@@ -1487,21 +1080,9 @@ Note:
 
 Recommendation: We can provide parsing code for deployment by the business party locally. Upon receiving the original data, run the parsing locally. Deployment locally is recommended for cases where technical capabilities are sufficient.
 
-#### 3.11.1 Interface Description
 
-* This interface is used to pull the result (success or failure) of the current acquisition from the backend, along with the structured data download URL of the parsed file (if available).
-* The download URL expires in 5 minutes.
-* **The access party needs to download and decrypt the parsing results in the same way as 3.5.1 and 3.5.2.** Only files within 10 days of acquisition (including acquisition original text, parsing results, and custody certificates) are supported for retrieval. Please retrieve files promptly for storage.
-* Interface Invocation:
 
-| Interface Name                                                                | Method | Content-Type     |
-| :---------------------------------------------------------------------------- | :----- | :--------------- |
-| (Testing Environment) https://testing-vdi.xxxx.xxx/api/efp/get-parse-result-x | POST   | application/json |
-| (Production Environment) https://vdi.xxxx.xxx/api/efp/get-parse-result-x      | POST   | application/json |
-
-Note: Please contact your integration partner to obtain the specific service provider domain.
-
-* Request:
+#### 2.8.2 Input Parameters
 
 | Parameter Name | Type   | Description                                                                     | Required | Length |
 | :------------- | :----- | :------------------------------------------------------------------------------ | :------- | :----- |
@@ -1513,61 +1094,55 @@ Note: Please contact your integration partner to obtain the specific service pro
 | arg.daId       | String | Acquisition ID                                                                  | Y        | 32     |
 | arg.ext        | Object | Spare field, ext is an object used for expansion                                | N        |        |
 
-* Response Parameters:
 
-| Parameter                         | Type   | Description                                                                                                                                                                                                                                           | Field Always Present |
-| :-------------------------------- | :----- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------- |
-| errorCode                         | int    | Result return code: 0 for success, non-0 for failure                                                                                                                                                                                                  | Y                    |
-| errorMessage                      | String | Description of the returned result                                                                                                                                                                                                                    | Y                    |
-| data                              | Object |                                                                                                                                                                                                                                                       | Y                    |
-| data.daId                         | String | Acquisition ID                                                                                                                                                                                                                                        | String               |
-| data.bizNo                        | String | Business layer serial number (not returned for fullminiapp mode)                                                                                                                                                                                      | Y                    |
-| data.**jsonResult**         | int    | File parsing status (see below for values)                                                                                                                                                                                                            | Y                    |
-| data.jsonFileUrl                  | String | Structured data corresponding to PDF and other files, an array where each element corresponds to structured data of a file.*Note: Upon receiving this field, the access party needs to first decode it in Base64 and then decrypt it using aesKey.* | Y                    |
-| data.site                         | String | Site visited by the user                                                                                                                                                                                                                              | Y                    |
-| data.ext                          | Object | Spare field, ext is an object used for expansion                                                                                                                                                                                                      | Y                    |
-| data.ext.fileKey                  | String | Key for file download decryption.*Note: Upon receiving this field, the access party needs to first decode it in Base64 and then decrypt it using aesKey.*                                                                                           | optional             |
-| data.ext.companyId                | String | Only available when the user visits a WeChat Pay merchant. It represents the merchant's Unified Social Credit Code (Business License Registration Code).                                                                                              | optional             |
-| data.ext.companyName              | String | Only available when the user visits a WeChat Pay merchant. It represents the merchant's name.                                                                                                                                                         | optional             |
-| data.ext.dl                       | Array  | File download status, only available when the site is a WeChat Pay merchant. It is an array.                                                                                                                                                          | optional             |
-| data.ext.dl.[].fileName           | String |                                                                                                                                                                                                                                                       | optional             |
-| data.ext.dl.[].**dlResult** | String | Specific file download status (see below for values)                                                                                                                                                                                                  | optional             |
-| data.ext.dl.[].**type**     | String | One of the bill types (see below for values)                                                                                                                                                                                                          | optional             |
-| data.ext.fileTypeMapping          | Map    | When the user visits a WeChat Pay merchant, the mapping of file index to file type                                                                                                                                                                    | optional             |
+
+#### 2.8.3 Output Parameters
+
+| Parameter                         | Type   | Description                                                                                                                                                                                                                                                | Field Always Present |
+| :-------------------------------- | :----- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------- |
+| errorCode                         | int    | Result return code: 0 for success, non-0 for failure                                                                                                                                                                                                       | Y                    |
+| errorMessage                      | String | Description of the returned result                                                                                                                                                                                                                         | Y                    |
+| data                              | Object |                                                                                                                                                                                                                                                            | Y                    |
+| data.daId                         | String | Acquisition ID                                                                                                                                                                                                                                             | String               |
+| data.bizNo                        | String | Business layer serial number (not returned for fullminiapp mode)                                                                                                                                                                                           | Y                    |
+| data.**jsonResult**         | int    | File parsing status (see below for values)                                                                                                                                                                                                                 | Y                    |
+| data.jsonFileUrl                  | String | Structured data corresponding to PDF and other files, an array where each element corresponds to structured data of a file.*Note: Upon receiving this field, the system integrator needs to first decode it in Base64 and then decrypt it using aesKey.* | Y                    |
+| data.site                         | String | Site visited by the user                                                                                                                                                                                                                                   | Y                    |
+| data.ext                          | Object | Spare field, ext is an object used for expansion                                                                                                                                                                                                           | Y                    |
+| data.ext.fileKey                  | String | Key for file download decryption.*Note: Upon receiving this field, the system integrator needs to first decode it in Base64 and then decrypt it using aesKey.*                                                                                           | optional             |
+| data.ext.companyId                | String | Only available when the user visits a WeChat Pay merchant. It represents the merchant's Unified Social Credit Code (Business License Registration Code).                                                                                                   | optional             |
+| data.ext.companyName              | String | Only available when the user visits a WeChat Pay merchant. It represents the merchant's name.                                                                                                                                                              | optional             |
+| data.ext.dl                       | Array  | File download status, only available when the site is a WeChat Pay merchant. It is an array.                                                                                                                                                               | optional             |
+| data.ext.dl.[].fileName           | String |                                                                                                                                                                                                                                                            | optional             |
+| data.ext.dl.[].**dlResult** | String | Specific file download status (see below for values)                                                                                                                                                                                                       | optional             |
+| data.ext.dl.[].**type**     | String | One of the bill types (see below for values)                                                                                                                                                                                                               | optional             |
+| data.ext.fileTypeMapping          | Map    | When the user visits a WeChat Pay merchant, the mapping of file index to file type                                                                                                                                                                         | optional             |
 
 * errorCode (Special Error Codes)
 
-| Error Code    | Error Message                        | Description                                                                                                       | Is Terminal Error Code           |
-| :------------ | :----------------------------------- | :---------------------------------------------------------------------------------------------------------------- | :------------------------------- |
-| 0             |                                      | Success                                                                                                           | Yes                              |
-| -44009 -43024 | NO_DB_RECORD_EXCEPTION               | daId does not exist                                                                                               | No, Retry required               |
-| -44028        | DA_NOT_AUTHORIZED_EXCEPTION          | The user is not authorized, so the access party cannot pull the user's acquisition files and custody certificates | No, Retry required               |
-| -44017        | NOT_RECEIVED_USER_PROTOCOL_EXCEPTION | User agreement not received                                                                                       | No, Retry required               |
-| -44001        | FILE_PARSE_EXCEPTION                 | Data parsing failed                                                                                               | No, Retry required within 7 days |
-| -44062        | DA_IN_PROGRESS_EXCEPTION             | Acquisition is still in progress; if daStatus=10 at this time, parsing is not yet complete                        | No, Retry required               |
-| -44021        | DA_FAILED_EXCEPTION                  | Acquisition failed and is in a terminal state                                                                     | Yes                              |
+| Error Code    | Error Message                        | Description                                                                                                            | Is Terminal Error Code           |
+| :------------ | :----------------------------------- | :--------------------------------------------------------------------------------------------------------------------- | :------------------------------- |
+| 0             |                                      | Success                                                                                                                | Yes                              |
+| -44009 -43024 | NO_DB_RECORD_EXCEPTION               | daId does not exist                                                                                                    | No, Retry required               |
+| -44028        | DA_NOT_AUTHORIZED_EXCEPTION          | The user is not authorized, so the system integrator cannot pull the user's acquisition files and custody certificates | No, Retry required               |
+| -44017        | NOT_RECEIVED_USER_PROTOCOL_EXCEPTION | User agreement not received                                                                                            | No, Retry required               |
+| -44001        | FILE_PARSE_EXCEPTION                 | Data parsing failed                                                                                                    | No, Retry required within 7 days |
+| -44062        | DA_IN_PROGRESS_EXCEPTION             | Acquisition is still in progress; if daStatus=10 at this time, parsing is not yet complete                             | No, Retry required               |
+| -44021        | DA_FAILED_EXCEPTION                  | Acquisition failed and is in a terminal state                                                                          | Yes                              |
 
-#### 3.11.2 Possible Values for jsonResult
+#### 2.8.4 jsonResult Values
 
-| Value | Description                                                                         |
-| :---- | :---------------------------------------------------------------------------------- |
-| 5     | Parsing in progress                                                                 |
-| 10    | Parsing successful, terminal state                                                  |
-| 11    | Parsing not required, terminal state                                                |
-| 12    | No user data after file parsing                                                     |
-| 13    | Company name in enterprise version data type parsing does not match the passed name |
-| 100   | Non-terminal state, recoverable                                                     |
-| 101   | Terminal failure                                                                    |
+| Value | Description                                                                           |
+| :---- | :------------------------------------------------------------------------------------ |
+| 5     | Parsing in progress                                                                   |
+| 10    | Parsing successful, terminal state                                                    |
+| 11    | Parsing not required, terminal state                                                  |
+| 12    | No user data after file parsing                                                       |
+| 13    | Company name in enterprise version data source parsing does not match the passed name |
+| 100   | Non-terminal state, recoverable                                                       |
+| 101   | Terminal failure                                                                      |
 
-#### 3.11.3 Possible Values for dlResult
-
-| Value | Description                                                             |
-| :---- | :---------------------------------------------------------------------- |
-| 10    | Download successful                                                     |
-| 100   | Download failed                                                         |
-| 400   | The data type is not available on the website for this transaction file |
-
-* Response
+* Response Example
 
 ```json
 {
@@ -1591,42 +1166,38 @@ Note: Please contact your integration partner to obtain the specific service pro
 
 **Note:**
 
-1. For some data types like Postal Savings Bank and Bank of China, the fileUrl field returned in the response may contain two or more URLs. Therefore, the access party needs to download and process multiple URLs for such data types when calling the interface.
+1. For some data sources, the fileUrl field returned in the response may contain two or more URLs. Therefore, the system integrator needs to download and process multiple URLs for such data sources when calling the interface.
 2. The URLs returned upon successful invocation of the interface are valid for 5 minutes. Therefore, it is necessary to complete the file download within 5 minutes. If the URL expires, you can call this interface again to obtain a new URL.
-3. Parsing may fail due to changes in the file format of user files of original data types or the emergence of new format use cases that are not covered, resulting in the temporary unavailability of jsonFileUrl. We will handle the re-adaptation of parsing and release a new version within 14 days to address this. Therefore, the access party needs to consider this exceptional scenario and support fallback retries within 14 days.
+3. Parsing may fail due to changes in the file format of user files of original data sources or the emergence of new format use cases that are not covered, resulting in the temporary unavailability of jsonFileUrl. We will handle the re-adaptation of parsing and release a new version within 14 days to address this. Therefore, the system integrator needs to consider this exceptional scenario and support fallback retries within 14 days.
 
-## 4 Notification (v2 Format) Interface Description for System Integrators
+## 3 Notification
 
-The process of data acquisition is asynchronous and handled by the clean environment backend service. After processing, it uses a notification method to call the interface (a single interface) that the System Integrator has pre-configured for the clean environment backend, to asynchronously notify the System Integrator of the business progress.
+The process of data fetching is asynchronous and handled by the trusted environment backend service. After processing, it uses a notification method to call the interface (a single interface) that the System Integrator has pre-configured for the trusted environment backend, to asynchronously notify the System Integrator of the business progress.
 
-Note: The v2 format notification is currently in the trial operation phase. If there is a need, you can contact your Tech Support Product Manager. The difference between v2 notifications and the original version is:
+After receiving the notification, the System Integrator must immediately return an errorCode of 0, otherwise the notification will keep retrying. The System Integrator can still use the interface in section 3.8 to actively pull as a fallback.
 
-* func contains the following fields: Data Acquisition Failure, Data Acquisition Completed and Authorized Successfully & Original-File-Parse Successful.
-* The notification directly includes the download address of the result file.
-* After receiving the notification, the System Integrator must immediately return an errorCode of 0, otherwise the notification will keep retrying. The System Integrator can still use the interface in section 3.8 to actively pull as a fallback.
+### 3.1 Notification Types
 
-### 4.1 What Notifications May Occur During the Entire Data Acquisition Cycle
-
-* Notification of the final state of data acquisition failure (required): **daFailed**, issued immediately
-* Data Acquisition Original File Notification/Authorization Completion Notification (required): **daUserAuthorized**, after the user data acquisition is successful and the user agreement is uploaded successfully, a file notification with the download address of the **Original-File** will be sent. If it is an asynchronous download data type, it needs to wait for the download to be completed, which may be issued about 30s after the front-end agrees to submit; otherwise, it is issued immediately.
+* Notification of the final state of data fetching failure (required): **daFailed**, issued immediately
+* data fetching Original File Notification/Authorization Completion Notification (required): **daUserAuthorized**, after the user data fetching is successful and the user agreement is uploaded successfully, a file notification with the download address of the **Original-File** will be sent. If it is an asynchronous download data source, it needs to wait for the download to be completed, which may be issued about 30s after the front-end agrees to submit; otherwise, it is issued immediately.
 * Parsed-Original-File Notification: **daFileParsed**, if it is not a localized parsing deployment, and the user agreement and authorization are completed, a notification with the download address of the **parsing result json file** will be sent after **parsing is completed**, generally delayed for 5 to 10 seconds after issuing daUserAuthorized.
 
-### 4.2 Generation and Verification of Notification Signature
+### 3.2 Notification Signature Verification
 
-Note: To facilitate integration, **verifying the signature of the notifications issued by us is not a mandatory process**. The System Integrator only needs to verify in scenarios where verification is required, such as when it is necessary to ensure that the received notification information is indeed initiated by the clean environment server.
+Note: To facilitate integration, **verifying the signature of the notifications issued by us is not a mandatory process**. The System Integrator only needs to verify in scenarios where verification is required, such as when it is necessary to ensure that the received notification information is indeed initiated by the trusted environment server.
 
-#### 4.2.1 System Provider Generates Signature
+#### 3.2.1 Signature Generation
 
-The clean environment operator signs the issued notifications using the RSA algorithm. The public key of the clean environment operator will be sent to the System Integrator by email when the System Integrator is integrated.
-After calculating the signature value, the clean environment backend puts the digital signature value into the request Header.
+The trusted environment operator signs the issued notifications using the RSA algorithm. The public key of the trusted environment operator will be sent to the System Integrator by email when the System Integrator is integrated.
+After calculating the signature value, the trusted environment backend puts the digital signature value into the request Header.
 
-* The System Integrator needs to verify the signature of the notification from the clean environment operator to ensure the authenticity and legality of the data.
+* The System Integrator needs to verify the signature of the notification from the trusted environment operator to ensure the authenticity and legality of the data.
 
-#### 4.2.2 Verification Method for System Integrators to Verify Notification Signatures
+#### 3.2.2 Signature Verification
 
 * First, retrieve the hash of the notification request parameters from the DECSHASH field in the header (calculate the hash while ensuring the appKey is the same as the one allocated to the System Integrator).
 * Extract the DECSSIGN field value from the notification's Header, which is the value of the sign.
-* The clean environment operator will send the public key used for notifications to the System Integrator via email.
+* The trusted environment operator will send the public key used for notifications to the System Integrator via email.
 * Use the CryptoTool's verify interface, passing DECSHASH and DECSSIGN to verify if the signature is correct. A return result of true indicates a successful verification.
 
 ```java
@@ -1647,11 +1218,11 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 }
 ```
 
-### 4.3 Notification Interface
+### 3.3 Notification API
 
-#### 4.3.1 Interface Description
+#### 3.3.1 Interface Description
 
-* Description: Whenever there is a change in the data acquisition status, the System Integrator will be notified of the change in status.
+* Description: Whenever there is a change in the data fetching status, the System Integrator will be notified of the change in status.
 * Request URL: Provided by the System Integrator
 * Request Method: POST
 * Request Header: Content-Type: application/json
@@ -1666,31 +1237,31 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 | data                                | Object     |                                                                                                                                                                                                                                                                                 | Y        |                |
 | data.bizAppId                       | String     | System Integrator's appId                                                                                                                                                                                                                                                       | Y        |                |
 | data.daId                           | String     | Data Aquisition ID                                                                                                                                                                                                                                                              | Y        |                |
-| data.bizNo                          | String     | System Integrator's transaction number (if entering directly from the clean environment, this field is an empty string, such as the fullminiapp standalone mini program method)                                                                                                 | Y        | 128 characters |
-| data.site                           | String     | Data type accessed by the user:[site possible values](/en/access/appendix?id=_2-supported-data-types-site)                                                                                                                                                                         | Y        | 32 characters  |
+| data.bizNo                          | String     | System Integrator's transaction number (if entering directly from the trusted environment, this field is an empty string, such as the fullminiapp standalone mini program method)                                                                                               | Y        | 128 characters |
+| data.site                           | String     | data source accessed by the user:[site possible values](/en/access/appendix?id=_2-supported-data-types-site)                                                                                                                                                                       | Y        | 32 characters  |
 | **data.daStatus**             | Int        | User data collection status                                                                                                                                                                                                                                                     | N        |                |
-| **data.fileUrlList**          | Array      | URLs of the downloaded files, an array indicating that there may be multiple files (pdf, csv, or xls, etc.). If data acquisition fails, the array is empty. data aquisition original filenotification: for the original data. Parsed file notification: for the parsed file.    | N        |                |
-| **data.jsonResult**           | Int        | File parsing completion (10 - parsing successful, 12 - no user data (for Housing Fund, employment information, income declaration data types), 13 - company name mismatch (for enterprise edition data types))                                                                  | N        |                |
+| **data.fileUrlList**          | Array      | URLs of the downloaded files, an array indicating that there may be multiple files (pdf, csv, or xls, etc.). If data fetching fails, the array is empty. data aquisition original filenotification: for the original data. Parsed file notification: for the parsed file.       | N        |                |
+| **data.jsonResult**           | Int        | File parsing completion (10 - parsing successful, 12 - no user data (for Housing Fund, employment information, income declaration data sources), 13 - company name mismatch (for enterprise edition data sources))                                                              | N        |                |
 | **data.certResult**           | Int        | Evidence Certificate generation completion (No longer usable)                                                                                                                                                                                                                   | N        |                |
 | data.authorizedTs                   | Long       | User's authorization completion timestamp in milliseconds, a value of 0 indicates no authorization. Unauthorized users cannot pull user files from the System Integrator. Therefore, you can determine if authorizedTs > 0 to confirm the status is correct before downloading. | N        |                |
 | data.ext                            | Object     | Reserved field, ext is an object for extension                                                                                                                                                                                                                                  | Y        |                |
-| data.ext.userId                     | String     | The third-party userId of the data acquisition user of the System Integrator,**only available for customers with independent mini program access method**                                                                                                                 | N        |                |
+| data.ext.userId                     | String     | The third-party userId of the data fetching user of the System Integrator,**only available for customers with independent mini program access method**                                                                                                                    | N        |                |
 | data.ext.fileKey                    | String     | The fileKey for downloading the file                                                                                                                                                                                                                                            | N        |                |
 | data.ext.pdfPassword                | Array      | If the downloaded file is a PDF that requires a password, this field will be returned                                                                                                                                                                                           | N        |                |
-| data.ext.daSubStatus                | Integer    | User data acquisition status subcode, indicating some failure details, such as no files for data acquisition. Possible values:[daSubStatus possible values](/en/access/appendix?id=_9-dasubstatus-enum-table)                                                                      | N        |                |
-| data.ext.childDaList                | Array      | Present in N-in-1 data types                                                                                                                                                                                                                                                    | N        |                |
-| data.ext.[].childDaList.daId        | String     | The sub daId for N-in-1 data type data acquisition                                                                                                                                                                                                                              | N        |                |
-| data.ext.[].childDaList.site        | String     | The sub site for N-in-1 data type data acquisition                                                                                                                                                                                                                              | N        |                |
-| data.ext.[].childDaList.daStatus    | String     | The sub daStatus for N-in-1 data type data acquisition                                                                                                                                                                                                                          | N        |                |
-| data.ext.[].childDaList.daSubStatus | String     | The sub daSubStatus for N-in-1 data type data acquisition                                                                                                                                                                                                                       | N        |                |
+| data.ext.daSubStatus                | Integer    | User data fetching status subcode, indicating some failure details, such as no files for data fetching. Possible values:[daSubStatus possible values](/en/access/appendix?id=_9-dasubstatus-enum-table)                                                                            | N        |                |
+| data.ext.childDaList                | Array      | Present in N-in-1 data sources                                                                                                                                                                                                                                                  | N        |                |
+| data.ext.[].childDaList.daId        | String     | The sub daId for N-in-1 data source data fetching                                                                                                                                                                                                                               | N        |                |
+| data.ext.[].childDaList.site        | String     | The sub site for N-in-1 data source data fetching                                                                                                                                                                                                                               | N        |                |
+| data.ext.[].childDaList.daStatus    | String     | The sub daStatus for N-in-1 data source data fetching                                                                                                                                                                                                                           | N        |                |
+| data.ext.[].childDaList.daSubStatus | String     | The sub daSubStatus for N-in-1 data source data fetching                                                                                                                                                                                                                        | N        |                |
 | data.ext.province                   | String     | When using the national social security data source, it represents the selected province or municipality directly under the central government                                                                                                                                  | N        |                |
 | data.ext.city                       | String     | When using the national social security data source, it represents the selected city                                                                                                                                                                                            | N        |                |
 | data.submitId                       | String     | The submission ID when submitting data on the index page                                                                                                                                                                                                                        | N        |                |
-| data.siteList                       | Array      | The list of data types submitted when submitting data on the index page:[possible values for site](/en/access/appendix?id=_2-supported-data-types-site)                                                                                                                            | N        |                |
+| data.siteList                       | Array      | The list of data sources submitted when submitting data on the index page:[possible values for site](/en/access/appendix?id=_2-supported-data-types-site)                                                                                                                          | N        |                |
 | data.submitTime                     | LongString | The submission time when submitting data on the index page, format is: "2023-05-22 10:22:55"                                                                                                                                                                                    | N        |                |
 | data.ext.exceptionPages             | Array      | Original file exception detection (currently only supports app-tax-income) format is: "exceptionPages": ["tax_income1.html","tax_income2.html"]                                                                                                                                 | N        |                |
 
-**Note:** The notification return fields are **not encrypted with aesKey**. The timing of the aesKey call is determined by the System Integrator, and the clean environment data collection backend cannot store the old aesKey for each data collection. Therefore, all notification fields are unencrypted.
+**Note:** The notification return fields are **not encrypted with aesKey**. The timing of the aesKey call is determined by the System Integrator, and the trusted environment data collection backend cannot store the old aesKey for each data collection. Therefore, all notification fields are unencrypted.
 Note 2: There is **no unzipPassword** in the return fields of the notification.
 
 * **The System Integrator must use the following return parameters as the response body**:
@@ -1772,31 +1343,29 @@ Note 2: There is **no unzipPassword** in the return fields of the notification.
 }
 ```
 
-#### 4.3.2 Important Notes
-
-**Note:**
+#### 3.3.2 Important Notes
 
 1. Based on the received notification, the timing for file retrieval should be judged as follows:
 
    * Upon receiving the user authorization completion notification (func = daUserAuthorized, daStatus = 10), the download path for the original file can be obtained from fileUrlList, or retrieved by calling the get-original-file interface.
    * Upon receiving both the user authorization completion notification and the parsing completion notification (func = daFileParsed, jsonResult = 10), the download path for the parsed result json file can be obtained from fileUrlList, or retrieved by calling the get-parse-result interface.
-   * Upon receiving the data acquisition failure notification (func = daFailed), there is no need to call any further retrieval interfaces, as the order has failed.
+   * Upon receiving the data fetching failure notification (func = daFailed), there is no need to call any further retrieval interfaces, as the order has failed.
 2. Parsing file notifications is an optional configuration. If local parsing deployment is used, it is possible to choose not to send and receive this type of notification.
-3. For a successful data acquisition task, there may be three types of notifications received as mentioned above: the user data acquisition original file notification & the parsing file notification. However, the prerequisite for all successful related notifications to be sent is that **the user has authorized and the user agreement has been successfully uploaded;** otherwise, the notifications will not be sent. If it fails, only the failure notification will be received.
-4. The clean environment access party will have multiple retries at certain time intervals when the first notification fails. However, notifications are not guaranteed to be delivered. If due to server issues of the sender and receiver or network problems, the notification cannot be delivered, the access party needs to make a contingency retrieval handling logic based on daId for this exceptional scenario. For details, see the following: Contingency Plan for Unreceived Notifications below.
-5. **The access party must provide a callback notification URL, and the protocol for this interface in the production environment must use HTTPS, not HTTP.**
-6. If using the fullminiapp independent mini program access, since the access party cannot know daId in advance, it is necessary to align the user through the userId in the ext field and timestamp.
-7. **The notification response must strictly follow this JSON structure and key naming:** {"errorCode":0,"errorMessage":"OK"}. If the recipient receives this notification, the errorCode in the response must return 0, otherwise the sender will consider it a failure and continue to retry. It is recommended to respond directly upon successful receipt of the notification, and to handle subsequent data from the notification asynchronously to avoid the interface taking too long and causing the sender to time out and resend.
+3. For a successful data fetching task, there may be three types of notifications received as mentioned above: the user data fetching original file notification & the parsing file notification. However, the prerequisite for all successful related notifications to be sent is that **the user has authorized and the user agreement has been successfully uploaded;** otherwise, the notifications will not be sent. If it fails, only the failure notification will be received.
+4. The trusted environment system integrator will have multiple retries at certain time intervals when the first notification fails. However, notifications are not guaranteed to be delivered. If due to server issues of the sender and receiver or network problems, the notification cannot be delivered, the system integrator needs to make a contingency retrieval handling logic based on daId for this exceptional scenario. For details, see the following: Contingency Plan for Unreceived Notifications below.
+5. **The system integrator must provide a callback notification URL, and the protocol for this interface in the production environment must use HTTPS, not HTTP.**
+6. If using the fullminiapp independent mini program access, since the system integrator cannot know daId in advance, it is necessary to align the user through the userId in the ext field and timestamp.
+7. **You must reply this notification following this JSON structure and key:** {"errorCode":0,"errorMessage":"OK"}. If the recipient receives this notification, the errorCode in the response must return 0, otherwise the sender will consider it a failure and continue to retry. It is recommended to respond directly upon successful receipt of the notification, and to handle subsequent data from the notification asynchronously to avoid the interface taking too long and causing the sender to time out and resend.
 8. The fileKey and fileUrl in the notification are in plain text and are not encrypted, and can be downloaded directly using the method described in the next section "Return Value Download Example."
-9. The validity period of the file URL in the notification is only 5 minutes, so please handle the file download asynchronously immediately after receiving to avoid the URL expiring and causing a download failure. Otherwise, the access party needs to call 3.5 (original file), and 3.11 (parsed json) again to retrieve the download URL and fileKey; at this time, the obtained download URL and fileKey are encrypted and need to be decrypted first using the method in 3.5.1 before downloading.
+9. The validity period of the file URL in the notification is only 5 minutes, so please handle the file download asynchronously immediately after receiving to avoid the URL expiring and causing a download failure. Otherwise, the system integrator needs to call 3.5 (original file), and 3.11 (parsed json) again to retrieve the download URL and fileKey; at this time, the obtained download URL and fileKey are encrypted and need to be decrypted first using the method in 3.5.1 before downloading.
 
-### 4.4 Downloading files
+### 3.4 Downloading Files
 
 This section provides a code example on how to download using the encrypted fileKey and fileUrl returned from the notification interface.
 
-Note: **The fileKey and fileUrl returned by the v2 notification are in plain text**, whereas the results obtained by proactive retrieval are encrypted with AES. Therefore, the fileKey and fileUrl from the v2 notification can be used without going through AES decryption (as in section 3.5.2); however, the results obtained by proactive retrieval require decryption before downloading (sections 3.5.1 and 3.5.2).
+Note: **The fileKey and fileUrl returned by the notification are in plain text**, whereas the results obtained by proactive retrieval are encrypted with AES. Therefore, the fileKey and fileUrl from the notification can be used without going through AES decryption (as in section 3.5.2); however, the results obtained by proactive retrieval require decryption before downloading (sections 3.5.1 and 3.5.2).
 
-If the cloud storage service on the clean environment server side is configured to use server-side encryption, the fileKey field returned by the interface will not be empty. It needs to be decrypted into a base64 key and used together with the decrypted fileUrl in the following code to download the file. The difference from the regular file download is that three additional encryption parameters are set in the header.
+If the cloud storage service on the trusted environment server side is configured to use server-side encryption, the fileKey field returned by the interface will not be empty. It needs to be decrypted into a base64 key and used together with the decrypted fileUrl in the following code to download the file. The difference from the regular file download is that three additional encryption parameters are set in the header.
 
 Here is the code example for downloading the file using the pre-signed URL:
 
@@ -1819,7 +1388,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```
 
-### 4.5 Fallback approach when notification interface is not applicable
+### 3.5 Best Practice for Fallback
 
 Notifications cannot be guaranteed to be delivered due to server issues or network problems on either side, which may prevent the notification from reaching its destination. The accessing party needs to implement a contingency retrieval logic based on `daId` for this exceptional scenario. Generally, the time when the data aquisition link is generated is marked as T0, and the successful completion (with `daStatus=0` and `authorizedTs>0`) is marked as T. The average parsing completion time, and maximum timeout time are as follows:
 
@@ -1829,7 +1398,7 @@ Notifications cannot be guaranteed to be delivered due to server issues or netwo
 
 **Best Practices:**
 
-* For each phase of data aquisition, when the front end receives the end information (returned by h5/sdk webview, or the completion redirect information of the mini program), proceed as follows:
+* For each phase of data aquisition, when the front end receives the end information (returned by HTML5 webview, or the completion redirect information of the mini program), proceed as follows:
 
   * Call interface 3.5 to retrieve the original file: Make 3 attempts after receiving the front-end end information, with intervals of 0s, 10s, and 60s respectively, stop once successful.
   * Call interface 3.11 to retrieve the parsing results: Make 3 attempts after receiving the front-end end information, with intervals of 5s, 1min, and 10min respectively, stop once successful.

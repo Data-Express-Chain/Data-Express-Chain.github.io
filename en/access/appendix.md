@@ -1,21 +1,17 @@
-## 1. Supported Access Methods (accessWay)
+## 1. Supported AccessWay
 
-Only h5 is supported.
+Only "h5" is supported.
 
-## 2. Supported Data Types (site)
+## 2. Supported Data Sources
 
-### 2.1 VDI Type Data
+Note: For asynchronous download data sources, a notification with daStatus = 10 will only be issued after all files have been successfully downloaded.
 
-Note: For asynchronous download data types, a notification with daStatus = 10 will only be issued after all files have been successfully downloaded.
+| site                 | Official Name                     | Description                   | accessway | File count & format | Data source type (PC/App) |
+| :------------------- | :-------------------------------- | :---------------------------- | :-------- | :------------------ | :------------------------ |
+| chrome-chiyubank-jyj | Chiyu banking transaction records | Chiyu Bank Website            | h5        | csv: 1 (zip)        | PC                        |
+| chrome-govhk-tax     | Tax payment e-receipt             | Hongkong Personal Tax Website | h5        | pdf: 1 (zip)        | PC                        |
 
-| site                 | Official Name                   | Description                   | accessway | File count & format | Data source type (PC/App) |
-| :------------------- | :------------------------------ | :---------------------------- | :-------- | :------------------ | :------------------------ |
-| chrome-chiyubank-jyj | Chiyu Bank Statement            | Chiyu Bank Website            | h5        | csv: 1 (zip)        | PC                        |
-| chrome-govhk-tax     | Hongkong Personal Tax e-receipt | Hongkong Personal Tax Website | h5        | pdf: 1 (zip)        | PC                        |
-
-## 3. Possible values of daStatus
-
-### 3.1 daStatus
+## 3. daStatus Values
 
 | Status Name                                                | daStatus                                | Description                                                                                                                                                                                                                                                                                                               | Final State?                                                                   | Notify System Integrator?                                                            | Valid Operation? |
 | :--------------------------------------------------------- | :-------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------- | :----------------------------------------------------------------------------------- | :--------------- |
@@ -49,7 +45,7 @@ Note: For asynchronous download data types, a notification with daStatus = 10 wi
   * The data format downloaded from the data type may be pdf/xls/csv/txt, etc.
   * **For the same user (idno) from the same integrator (appId), on the same** **calendar day** **(counted by the time the start-vdi** **request is initiated**), obtaining the same data type (site), only the first valid operation is charged. Other repeated data collection operations for the same site, whether valid or not, are not charged.
 
-### 3.2 jsonResult
+## 4. jsonResult Values
 
 | Value        | Other                                                                                      |
 | :----------- | :----------------------------------------------------------------------------------------- |
@@ -59,13 +55,18 @@ Note: For asynchronous download data types, a notification with daStatus = 10 wi
 | 12           | No user data after file parsing                                                            |
 | 13           | The company name parsed for the enterprise version data type does not match the input name |
 
-## 4. Possible values for accessWay
+## 5. daSubStatus Values
 
-| accessWay Value | Description   |
-| :-------------- | :------------ |
-| h5              | Access via h5 |
+Note: daSubStatus is only for detailing the reasons for authentication failure and is not a criterion for billing.
+(This table will be iteratively updated with supported data sources, the listed error codes will not be changed)
 
-## 5. How to Generate RSA Public and Private Keys
+| daStatus | daSubstatus |                           |
+| :------- | :---------- | :------------------------ |
+| 41       | 80020       | Website is not accessible |
+| 44       | 81535       | No data                   |
+|          | 100099      | Not the person themselves |
+
+## 6. How to Generate RSA Public and Private Key-Pair
 
 It is recommended to generate them using the command line in a Linux environment.
 
@@ -79,7 +80,7 @@ openssl rsa -in rsa_private_key.pem -pubout -out rsa_public_key.pem
 // Convert pkcs1 format private key to pkcs8 format private key rsa_private_key_pkcs8.pem openssl pkcs8 -topk8 -inform PEM -in rsa_private_key.pem -outform PEM -nocrypt -out rsa_private_key_pkcs8.pem
 ```
 
-## 6. How to Download Files Encrypted by Server-Side File Encryption
+## 7. How to Download Encrypted Data Fetching Results
 
 If file storage service server-side encryption is configured, the fileKey field returned by the file pull interface is not empty. You need to decrypt it into a base64 filekey, and use it together with the decrypted fileUrl to download the file using the code below. The difference from normal file download is that three additional parameters for file download decryption are set in the header.
 
@@ -103,19 +104,6 @@ void testDownloadUsingPresignedUrl() throws Exception{
         FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), fileBytes);
 }
 ```
-
-## 7. daSubStatus Enum Table
-
-Note: daSubStatus is only for detailing the reasons for authentication failure and is not a criterion for billing.
-(This table will be iteratively updated with supported data sources, the listed error codes will not be changed)
-
-General:
-
-| daStatus | daSubstatus |                           |
-| :------- | :---------- | :------------------------ |
-| 41       | 80020       | Website is not accessible |
-| 44       | 81535       | No data                   |
-|          | 100099      | Not the person themselves |
 
 ## 8. Production Pre-Launch Checklist
 
