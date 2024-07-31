@@ -1,18 +1,14 @@
-## 1. Information Required from the System Integrator
+## 1. API Authentication
 
-Please Refer to the Corresponding H5 Integration Document.
+When calling **all APIs** in Chapter 2, it is **REQUIRED** to generate the authentication header using the method described in this chapter.
 
-## 2. Secure Login Authentication
+### 1.1 Notes
 
-When calling **all interfaces** in Chapter 3, it is **REQUIRED** to generate the authentication header using the method described in this chapter.
+* All openapi requests are **POST** requests, and the content-type is always **application/json**.
 
-### 2.1 Notes
+### 1.2 Hash Algorithm
 
-* All openapi requests are POST requests, and the content-type is always application/json.
-
-### 2.2 Hash Algorithm
-
-#### 2.2.1 Generate JSON Based on the Required Parameters of the Interface Request
+#### 1.2.1 Parameters Preparation
 
 For example, the interface request parameters are as follows:
 
@@ -30,7 +26,7 @@ For example, the interface request parameters are as follows:
 }
 ```
 
-#### 2.2.2 Sort the Keys of the Request Parameters JSON String in ASCII Dictionary Order
+#### 1.2.2 Parameters Sorting
 
 Note that the request parameters JSON is generally a multi-level structure, each level needs to be sorted by key in ASCII dictionary order.
 For example, the sorted request parameters JSON are as follows:
@@ -49,7 +45,7 @@ For example, the sorted request parameters JSON are as follows:
 }
 ```
 
-#### 2.2.3 Serialize the JSON of the Request Parameters to a String
+#### 1.2.3 Parameters Serialization
 
 * Note: Remove all whitespace characters from the JSON string.
 
@@ -57,7 +53,7 @@ For example, the sorted request parameters JSON are as follows:
 {"arg":{"a":"xxx","b":"xxx"},"auth":{"appId":"IDAkEBvb","nonce":"20rr7wbca98e8325f0fjd77yl130j6hi"},"v":"1.0.0"}"
 ```
 
-#### 2.2.4 Calculate the Hash
+#### 1.2.4 Hash Calculation
 
 Append the appKey to the end of the sortedJson to get the sortedJsonWithKey string. Perform HMAC-SHA256 operation on sortedJsonWithKey (if needed, use the appKey as the key for the operation). Convert all characters of the resulting string to uppercase to get the unsignedData. Note: The length of the appKey is 64 bytes.
 
@@ -69,7 +65,7 @@ sortedJsonWithKey = sortedJson + "FcuMaP8q39Q4IigraXdDKpvaOhF2PqNptq86ZHYRvtMjAd
 decsHash = HMAC-SHA256("HmacSHA256", sortedJsonWithKey).toUpperCase() = "C3AF574420D41A7CEE9C44FCFC84FE15D36D5C97A80111278B82CCEAFCDC7C96";
 ```
 
-#### 2.2.5 Add the Hash to the Request Header
+#### 1.2.5 Append Hash to Request Header
 
 Add a field DECSHASH to the HTTP Header, with the value being the hash calculated in the previous step.
 
@@ -78,7 +74,7 @@ Map<String, String> header = new HashMap<>();
 header.put("DECSHASH", decsHash);
 ```
 
-#### 2.2.6 Full Example
+#### 1.2.6 Full Example
 
 ```java
 import com.fasterxml.jackson.databind.JsonNode;
@@ -149,18 +145,18 @@ public class DecsHashTool {
 }
 ```
 
-### 2.3 General Interface Error Code
+### 1.3 Error Codes of Authentication
 
-When calling any interface, there is a small chance that some common interface errors may occur, as follows:
+When calling authentication interface, there is a small chance that some common interface errors may occur, as follows:
 
 | Error Code | Error Message   | Description                                                         |
 | :--------- | :-------------- | :------------------------------------------------------------------ |
 | -48007     | ExternalLBError | External network redirect error (temporary), please try again later |
 | -50005     | SignInvalid     | DECSHASH calculation error                                          |
 
-## 3 Interface List
+## 2 API List
 
-### 3.1 Update AES Encryption Key Interface
+### 2.1 Update AES Encryption Key Interface
 
 When the System Integrator calls the related interfaces of the Clean Environment (or receives notifications), in order to protect the sensitive information of the System End-User (user agreement, user name, user ID number, user's Original-File URL) from leakage, these sensitive information need to be encrypted using the AES algorithm. To ensure the security of the encryption and decryption key, it is recommended that the System Integrator periodically calls this interface to update the AES encryption key (hereinafter referred to as aesKey) together with the Clean Environment System Provider.
 
