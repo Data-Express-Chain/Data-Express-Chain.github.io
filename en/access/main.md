@@ -597,7 +597,9 @@ public class CryptoTool {
 https://www.yyy.com/jumpChannel.html?attach_url=channel_a&bizNo=acf1700443444e7b9206c6d5b36ec955&daId=zd240e1e1722158295759228928&site=app-tax-income&daStatus=10
 ```
 
-#### 2.3.7 Code Example to encrypt parameters
+#### 2.3.7 Code Example
+
+**Encrypt Parameters**
 
 ```
 @Test
