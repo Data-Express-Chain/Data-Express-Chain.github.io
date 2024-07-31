@@ -6,7 +6,7 @@
 ### 1.1 注意事项
 * openapi请求均为POST请求，content-type均为application/json  
 
-### 1.2 哈希算法  
+### 1.2 鉴权头生成  
 
 #### 1.2.1 参数准备  
 根据接口请求所需参数生成 JSON ，举例：接口请求参数如下： 
@@ -53,12 +53,12 @@
 
 #### 1.2.4 计算哈希  
 
-在 sortedJson 最后拼接上 appKey 得到 sortedJsonWithKey 字符串，并对 sortedJsonWithKey 进行 HMAC-SHA256 运算（运算过程中，如需，需要将appKey作为运算用密钥），再将得到的字符串所有字符转换为大写，得到 unsignedData。 注意：appKey的长度为 64 个字节。
+在序列化之后的字符串(sortedJson) 后面拼接上 appKey 得到 sortedJsonWithKey 字符串，并对 sortedJsonWithKey 进行 HMAC-SHA256 运算（运算过程中，如需，需要将appKey作为运算用密钥），再将得到的字符串所有字符转换为大写，得到 unsignedData。 注意：appKey的长度为 64 个字节。
 
 举例： 
 
 ```java
-sortedJsonWithKey = sortedJson + "FcuMaP8q39Q4IigraXdDKpvaOhF2PqNptq86ZHYRvtMjAdVZIOSEfW4t6IdxUJu9"; //注：拼接的后一项为接入方设置的 appKey
+sortedJsonWithKey = sortedJson + "FcuMaP8q39Q4IigraXdDKpvaOhF2PqNptq86ZHYRvtMjAdVZIOSEfW4t6IdxUJu9"; //注：拼接的后一项为接入方的 appKey
 
 decsHash = HMAC-SHA256("HmacSHA256", sortedJsonWithKey).toUpperCase() = "C3AF574420D41A7CEE9C44FCFC84FE15D36D5C97A80111278B82CCEAFCDC7C96";
 ```  
@@ -143,7 +143,7 @@ public class DecsHashTool {
 }
 ```  
 
-### 1.3 鉴权相关的错误
+### 1.3 错误码
 
 在调用任意一个接口时，有小概率可能会产生一些通用的接口报错，如下：
 
@@ -155,7 +155,7 @@ public class DecsHashTool {
 ## 2 接口列表  
 
 ### 2.1 更新AES加密秘钥接口  
-
+#### 2.1.1 接口说明 
 接入方在调用清洁环境的相关接口时（或接收通知时），为了保护用户的敏感信息（用户协议、用户姓名、用户身份证号码、用户取证文件的URL）不泄露，需要对这些敏感信息用AES算法进行加密。为了保证加解密秘钥的安全，建议接入方定期和清洁环境服务提供方一起，定期调用此接口更新AES加密的秘钥（后面简称为aesKey）。  
 
 **注意**：
@@ -163,25 +163,25 @@ public class DecsHashTool {
 1. 更新aesKey的频率，由接入方来控制，建议是在用户比较少的时候进行更新。
 2. 在接入方更新aesKey的过程中，由于接入方和清洁环境服务提供方保存和使用新的aesKey存在时间差，在更新的瞬间，两边加解密使用的aesKey可能不一致的情况。在出现此种情况时，请求会失败，此种类型失败会收到特定的加密或解密失败的错误码。建议接入方收到此种错误码后，重发一次请求，可以避免此问题。
 
-* 接口调用方式：  
+#### 2.1.2  接口路径  
 
 |接口名|Method|Content-Type|
 |:----|:----|:----|
-|(测试环境)<br>https://testing-vdi.<服务方域名>/api/das/update-aes-key|POST|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>/api/das/update-aes-key|POST|application/json|
+|(测试环境)<br>https://testing-vdi.xxxx.xxx/api/das/update-aes-key|POST|application/json|
+|(生产环境)<br>https://vdi.xxxx.xxx/api/das/update-aes-key|POST|application/json|
 
-注：具体的服务方域名，请联系您的对接同学获取
+注：具体的域名，请联系您的对接人员获取
 
-* 请求：  
+#### 2.1.3  请求参数  
 
 |参数名|类型|说明|Required|长度|
 |:----|:----|:----|:----|:----|
 |v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
+|auth|Object|    |Y|    |
 |auth.appId|String|传入预先分配好的appId|Y|8|
 |auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
-|arg.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
+|arg|Object|    |Y|    |
+|arg.ext|Object|备用字段，ext是一个对象，用于扩展|N|    |
 
 * 请求参数示例  
 
@@ -197,13 +197,13 @@ public class DecsHashTool {
 }
 ```
 
-* 返回参数
+#### 2.1.4  返回参数
 |参数|类型|说明|Required|
 |:----|:----|:----|:----|
-|errorCode|int|结果的返回码：0:成功，非0失败|Y|
+|errorCode|Int|结果的返回码：0:成功，非0失败|Y|
 |errorMessage|String|返回结果描述|Y|
-|data|对象|返回结果(如果调用失败返回null)|Y|
-|data.aeskey|String|由清洁环境服务方生成，用接入方的RSA公钥（申请appId时提供的公钥）加密，再用Base64编码后的aes秘钥。<br>接入方收到后，需要先Base64解码，然后用自己的RSA私钥进行解密|Y|
+|data|Object|返回结果(如果调用失败返回null)|Y|
+|data.aeskey|String|由清洁环境服务提供方生成，用接入方的RSA公钥（申请appId时提供的公钥）加密，再用Base64编码后的AES秘钥。<br>接入方收到后，需要先Base64解码，然后用自己的RSA私钥进行解密|Y|
 
 * 返回参数示例  
 
@@ -217,7 +217,7 @@ public class DecsHashTool {
 }
 ```  
 
-#### 2.1.1 代码示例  
+#### 2.1.5 代码示例  
 对请求返回的aesKey进行解密代码示例  
 
 Java:  
@@ -280,48 +280,46 @@ NodeJs:
 AES加解密，需要使用aes-128-ecb，作为默认cipher
 
 
-### 3.2 用户协议签署接口
-
-* 接口说明：
+### 2.2 用户协议上传接口
+#### 2.2.1 接口说明  
 
 接入方在进入清洁环境正式使用之前，需要提示用户与清洁环境服务提供方签署一份用户协议，完成后上传。  
-<!-- **本接口，对于使用miniappwithca、fullminiapp方式接入的场景不需要调用。**   -->
 **此接口可以异步调用。如调用失败，不影响用户取证主流程。**  
 
 * 协议处理要求
 
-1）用户选择提交对应的数据类型（接口中的site）时，要使用对应的协议模板签署（我们提供模版，仅**数据类型中文名称**根据**site**变化，其他一致），且为pdf格式，需要替换的内容为绿色部分（全文替换2处）。数据类型中文名称和site对应关系见附录第二章，site英文值对应的最后一列：[2.1 VDI类型数据](/zh/access/appendix?id=_21-vdi类型数据)  
-2）在文初姓名、身份证的地方对应动态写入当前用户的姓名、身份证号码（明文）  
-3）文末用CA签名（调用接入方给C端用户的的电子签），并且加上日期  
-4）签署好之后，每次调用把签署好的PDF文件通过3.4接口上传。  
+1. 用户选择提交对应的数据类型（接口中的site）时，要使用对应的协议模板签署（我们提供模版，仅**数据类型中文名称**根据**site**变化，其他一致），且为pdf格式，需要替换的内容为绿色部分（全文替换2处）。数据类型中文名称和site对应关系见附录第二章，site英文值对应的最后一列：[支持的数据类型](/zh/access/appendix?id=_2-支持的数据类型)  
+2. 在文初姓名、身份证的地方对应动态写入当前用户的姓名、身份证号码（明文）  
+3. 文末用CA签名（调用接入方给C端用户的的电子签），并且加上日期  
+4. 签署好之后，每次调用把签署好的PDF文件通过接口上传。  
 备注：协议可复用，维度是用户身份证号（接口中的idNo） + 数据类型（接口中的site）。举例：张三取了A数据类型，协议可以签署一份，但是张三每次提交A的时候，这一份协议都要调用接口传送。  
-5）协议需要在用户操作完成之前传过来，这样确保可以及时收到通知和及时拉取取数文件  
+5. 协议需要在用户操作完成之前传过来，这样确保可以及时收到通知和及时拉取取数文件  
 注意：**应业务要求，各接入方请务必确保每个用户、及该用户每个请求到的数据类型都上传用户协议，否则我方有权停止服务**。
 
-* 接口调用方式：  
+#### 2.2.2 接口路径 
 
 |接口名|Method|Content-Type|
 |:----|:----|:----|
-|(测试环境)<br>https://testing-vdi.<服务方域名>/api/das/upload-user-protocol-x|POST|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>/api/das/upload-user-protocol-x|POST|application/json|
+|(测试环境)<br>https://testing-vdi.xxxx.xxx/api/das/upload-user-protocol-x|POST|application/json|
+|(生产环境)<br>https://vdi.xxxx.xxx/api/das/upload-user-protocol-x|POST|application/json|
 
-注：具体的服务方域名，请联系您的对接同学获取
+注：具体的域名，请联系您的对接人员获取
 
-* 请求：  
+#### 2.2.3 请求参数  
 
 |参数名|类型|说明|Required|长度|
 |:----|:----|:----|:----|:----|
 |v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
+|auth|Object|    |Y|    |
 |auth.appId|String|传入预先分配好的appId|Y|8|
 |auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
-|arg.idNo|String|使用VDI的用户的身份证号。**接入方需要首先对身份证号进行合法性验证，对不符合身份证号码格式和位数的请求予以拒绝。**<br><br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
-|arg.site|String|用户访问的数据类型：[site的可能取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)|Y|    |
-|arg.files[]|对象数组|协议文件数组|Y|    |
+|arg|Object|    |Y|    |
+|arg.idNo|String|用户的ID。**接入方需要首先对ID进行合法性验证，对不符合ID码格式和位数的请求予以拒绝。**<br><br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
+|arg.site|String|用户访问的数据类型：[支持的数据类型](/zh/access/appendix?id=_2-支持的数据类型)|Y|    |
+|arg.files[]|Object[]|协议文件数组|Y|    |
 |arg.files[].name|String|文件名|Y|    |
 |arg.files[].content|String|文件内容<br>*说明：使用aesKey对文件流进行加密，然后Base64编码加密后的文件流。*|Y|    |
-|arg.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
+|arg.ext|Object|备用字段，ext是一个对象，用于扩展|N|    |
 
 * 请求参数示例  
 
@@ -345,14 +343,14 @@ AES加解密，需要使用aes-128-ecb，作为默认cipher
 }
 ```
 
-* 返回参数  
+#### 2.2.4 返回参数  
 
 |参数|类型|说明|Required|
 |:----|:----|:----|:----|
-|errorCode|int|结果的返回码：0:成功，非0失败|Y|
+|errorCode|Int|结果的返回码：0:成功，非0失败|Y|
 |errorMessage|String|返回结果描述|Y|
-|data|对象|返回结果(如果调用失败返回null)|Y|
-|data.result|boolean|文件上传结果|Y|
+|data|Object|返回结果(如果调用失败返回null)|Y|
+|data.result|Boolean|文件上传结果|Y|
 
 * 特殊错误码  
 
@@ -372,7 +370,7 @@ AES加解密，需要使用aes-128-ecb，作为默认cipher
 }
 ```
  
-#### 2.2.1 代码示例
+#### 2.2.5 代码示例
 对请求的file content字段文件内容进行加密代码示例
 
 ```java
@@ -413,52 +411,52 @@ FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 ```
 
 
-### 2.3 start-vdi-x 接口
+### 2.3 开始取数接口
 
-* 接口说明： 
+#### 2.3.1 接口说明 
 
-接入方在跳转清洁环境之前，需要先调用此接口申请一台VDI机位。调用成功之后，后台会返回一个URL链接，供接入方前端页面跳转。
+接入方在跳转清洁环境之前，需要先调用此接口开始取数。调用成功之后，后台会返回一个URL链接，供接入方前端页面跳转。
 
 * 注意：如果体验为用户点击某个按钮，就会触发接入方后台调用该接口，则一定要做好交互上的限制，防止用户快速重复点击（快速重复点击会导致用户取证被提前结束）。推荐体验是：  
   1. 用户点击该按钮
-  2. 按钮开始转菊花（按钮转菊花过程中，不允许用户再次点击）
+  2. 按钮开始加载（按钮加载过程中，不允许用户再次点击）
   3. 触发接入方后台调用该接口 （start-vdi-x）
   4. 该接口请求返回或者请求超时
-  5. 停止转菊花。如果该接口成功返回，则跳转到清洁环境；如果失败，则提示相应错误。
+  5. 停止加载。如果该接口成功返回，则跳转到清洁环境；如果失败，则提示相应错误。
 
-* 接口调用方式：  
+#### 2.3.2 接口路径   
 
 |接口名|Method|Content-Type|
 |:----|:----|:----|
-|(测试环境)<br>https://testing-vdi.<服务方域名>/api/das/start-vdi-x|POST|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>/api/das/start-vdi-x|POST|application/json|
+|(测试环境)<br>https://testing-vdi.xxxx.xxx/api/das/start-vdi-x|POST|application/json|
+|(生产环境)<br>https://vdi.xxxx.xxx/api/das/start-vdi-x|POST|application/json|
 
-注：具体的服务方域名，请联系您的对接同学获取
+注：具体的域名，请联系您的对接人员获取
 
-* 请求：  
+#### 2.3.3 请求参数   
 
 |参数名|类型|说明|Required|长度限制|
 |:----|:----|:----|:----|:----|
 |v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
+|auth|Object|    |Y|    |
 |auth.appId|String|传入预先分配好的appId|Y|8|
 |auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
+|arg|Object|    |Y|    |
 |arg.bizScenario|String|业务类型，接入方直接填 general|Y|32|
-|arg.site|String|用户访问的数据类型：[site的可能取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)|Y|32|
+|arg.site|String|用户访问的数据类型：[支持的数据类型](/zh/access/appendix?id=_2-支持的数据类型)|Y|32|
 |arg.bizNo|String|业务流水号。建议设计统一规则如进件渠道等，方便后续扩展|Y|60|
-|arg.openId|String|接入方中用户的身份标识，用于定位本次VDI使用的用户<br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|128|
-|arg.idNo|String|使用VDI的用户的身份证号。**接入方需要首先对身份证号进行合法性验证，对不符合身份证号码格式和位数的请求予以拒绝。**<br><br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
+|arg.openId|String|接入方中用户的身份标识，用于定位本次取数使用的用户<br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|128|
+|arg.idNo|String|用户的ID。**接入方需要首先对用户ID进行合法性验证，对不符合用户ID码格式和位数的请求予以拒绝。**<br><br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
 |arg.userName|String|用户做完接入方KYC的真实姓名，会在我方页面显示。*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
-|arg.userClaim|String|用户申明的那一段文字，目前是“该用户已完成刷脸/验密/公安/微警身份认证”<br>*注意：业务方根据实际核身的方式填写文字*|Y|128个字符（byte）<br>注意不是128个汉字字符|
-|arg.ua|String|用户终端设备的user agent，目的是尽量模拟用户真实的手机环境，可以从前端webview属性获取。如果无法获取到（如H5场景中），可以传固定值。|Y|    |
-|arg.width|unsigned int|终端屏幕宽度（期望的用户可视区域的宽度），必须为整数|Y|    |
-|arg.height|unsigned int|期望的用户可视区域的高度（终端屏幕高度，除去顶部nav bar，底部的tab bar等的高度），必须为整数|Y|    |
-|arg.accessWay|String|接入方式。您需要填入根据下列链接，填入相应值：<br>[accessWay可能取值](/zh/access/appendix?id=_4-accessway可能取值)|Y|    |
-|arg.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
+|arg.userClaim|String|用户申明的那一段文字<br>*注意：业务方根据实际核身的方式填写文字*|Y|128个字符（byte）<br>注意不是128个汉字字符|
+|arg.ua|String|用户终端设备的user agent，目的是尽量模拟用户真实的手机环境，可以从前端webview属性获取。如果无法获取到，可以传固定值。|Y|    |
+|arg.width|Unsigned int|终端屏幕宽度（期望的用户可视区域的宽度），必须为整数|Y|    |
+|arg.height|Unsigned int|期望的用户可视区域的高度（终端屏幕高度，除去顶部nav bar，底部的tab bar等的高度），必须为整数|Y|    |
+|arg.accessWay|String|接入方式。您需要填入根据下列链接，填入相应值：<br>[支持的接入方式](/zh/access/appendix?id=_1-支持的接入方式)|Y|    |
+|arg.ext|Object|备用字段，ext是一个对象，用于扩展|N|    |
 |arg.ext.attach|String|附加数据，如果传值，则会在后端通知数据的ext里带上此字段|N|128个字符（byte），注意不是128个汉字字符|
-|arg.ext.urlattach|String|回跳URL附加字段（仅用于h5接入）。用于在返回接入方前端回跳页面时，附带额外参数。在接入方start-vdi传入，在h5取证完成后，从我方授权页面回跳到接入方h5页面时，url会携带此参数：key为attach_url，value为这里传入的值。|N|12个字符|
-|arg.ext.childSites|Array|当arg.site为N合一时，childSites数组需要填写|N|    |
+|arg.ext.urlattach|String|回跳URL附加字段。用于在返回接入方前端回跳页面时，附带额外参数。在接入方start-vdi传入，在h5取证完成后，从我方授权页面回跳到接入方h5页面时，url会携带此参数：key为attach_url，value为这里传入的值。|N|12个字符|
+|arg.ext.childSites|String[]|当arg.site为N合一时，childSites数组需要填写|N|    |
 
 * 请求参数示例  
 
@@ -485,35 +483,29 @@ FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 }
 ```
 
-* 返回参数  
+#### 2.3.4 返回参数  
 
 |参数|类型|说明|Required|
 |:----|:----|:----|:----|
-|errorCode|int|结果的返回码：0:成功，非0失败|Y|
+|errorCode|Int|结果的返回码：0:成功，非0失败|Y|
 |errorMessage|String|返回结果描述|Y|
-|data|对象|返回结果(如果调用失败返回null)|Y|
+|data|Object|返回结果(如果调用失败返回null)|Y|
 |data.daId|String|该笔取数请求全局唯一的取数流水ID：daId|Y|
-|data.redirectUrl|String|用于访问VDI的页面|Y|
-|data.kycUrl|String|用户进行刷脸的url，有效期8min<br>只对特定用户开放，在accessWay为h5withca时返回。由于需要先刷脸再取证，因此接入方需要通过此url来跳转到刷脸页面和取证页面。（需要把增加了sign参数的redirectUrl拼接在此url后面）|    |
+|data.redirectUrl|String|用于访问清洁环境的页面|Y|
 
-注：data.kycUrl样例如：https://vdi.服务方域名/vdi/authKycPage.html?daId=xxxx&faceIdSession=yyyy，使用时需要拼接加了sign的redirectUrl（见下文3.3.1）再跳转。
-
-拼接后的样例如：https://vdi.服务方域名/vdi/authKycPage.html?daId=xxxx&faceIdSession=yyyy&redirectUrl=https://vdi.服务方域名/vdi/vdi.html?accessWay=h5withca&appId=bh2ab0ff&bhMode=2&bizScenario=general&daId=xxxx&fullUrl=true&needGuidePage=1&scrcpyGray=scrcpy&site=app-alipay-jiebei&title=%E7%99%BE%E8%A1%8C&vcode=hGX1x8kooslOKbUT_Bbg9sk1YoKpEsgZ2jHlBXWEVq4%3D&sign=DYJ7Eg+hJJCYVQGPtGLhZIFFzM6vCC8ozeZXzGceSvU1gHjeROzvfUjKT3/rTOmO9U8gCJCiVp/V4Rusqyo5xJayxY+B3/ndABOcM2a/MBXNr++LN2uOdtWIg5BMhPcop0mugU0Vt2kzcVwUFxx9rMYmqtQgN+LiNpx8bUIAw+LyE/5ztPmZjp4GCxeg4HzQvJfssZCI3R1I/Bo4IeXxKMFpGbE8QHecz+qwzud2IicXAiorNc7JOdAKW/pRdLT5AxaEgFiG7Tb3ibTlZtJUluottKuZ1eIMizNQv2R/L5Z/nTIxjMOXBZ43CmMMoA75VGI2ejT3XgBd+lzxuybn6w==
 
 * 特殊错误码  
 
 |错误码|错误信息|描述|
 |:----|:----|:----|
 |-43037|AES_DECRYPT_EXCEPTION|AES解密失败，请使用最新的AES密钥|
-|-45001|StartLockVMError|无可用的 VDI 机位，请稍候再试|
+|-45001|StartLockVMError|无可用的取数机位，请稍候再试|
 |-45004|StartVMError|临时网络错误，请稍候再试|
-|-45027|ExistingDownloadingDaTask|当前用户已有取证业务在下载中，请稍候再试|
-|-45030|StartParamIdNoLessError|身份证号码年龄错误|
-|-45031|StartParamIdNoError|身份证号码格式错误|
+|-45027|ExistingDownloadingDaTask|当前用户已有取数业务在下载中，请稍候再试|
 |-45028|IdNoDailyRequestError|当日总访问次数超限|
 |-45032|IdNoCurrentRequestError|用户访问过于频繁，请稍后再试|
 |-48007|    |临时网络错误|
-|-48025|DataSourceUnavailable|当前数据类型不可用（严重！）。当收到此请求时，请暂时关闭数据类型取数入口。建议接入方定期调用3.7接口拉取当前数据类型状态。|
+|-48025|DataSourceUnavailable|当前数据类型不可用（严重！）。当收到此请求时，请暂时关闭数据类型取数入口。建议接入方定期调用接口拉取当前数据类型状态。|
 |-50002|SiteInvalid|数据源未开启，请联系您的对接人|
 
 * 返回参数示例  
@@ -524,23 +516,16 @@ FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
     "errorMessage": "succ",
     "data": {
         "daId":"de1tuknz1500809629993668608",
-        "redirectUrl": "https://testing-vdi.<服务方域名>/vdi/vdi.html?daId=de1tuknz1500809629993668608&vcode=A86uXkYbIEwuFnr2y0ibZ9qjBGC3-X0D5HJKiylEMwA=&site=chsi&bizScenario=general&appId=de1tuknz&accessWay=sdk&fullUrl=true"
+        "redirectUrl": "https://testing-vdi.xxxx.xxx/vdi/vdi.html?daId=de1tuknz1500809629993668608&vcode=A86uXkYbIEwuFnr2y0ibZ9qjBGC3-X0D5HJKiylEMwA=&site=chsi&bizScenario=general&appId=de1tuknz&accessWay=sdk&fullUrl=true"
     }
 }
 ```
 
-注：此处的redirectUrl也即为SDK接入方式下的baseUrl  
-
-注：生成的链接，有效期为8min（vcode过期时间），若超过此时间未点击进入，会提示过期；若点击了并进入取数，对vdi模式，操作超时时间为10min；对非vdi模式，操作超时时间为60min。若超时，会提示链接已过期。  
+注：生成的链接，有效期为8min（vcode过期时间），若超过此时间未点击进入，会提示过期。
 
 注：关于重入此链接：出于安全防重入的考虑，生成的链接只能用来生成一次登录态，也就是只要保证登录态不掉，可在webview里面刷新，也可以把页面挂起、切后台，都不影响当次取证。但如果接入方用户重新点击一次url进入，会导致登录态重建，此时会提示链接已过期，需要重新调用start-vdi。
-<!-- 
-注：如果在APP内通过H5接入，且需要对接的数据源类型需要刷脸，需要注意以下几点：
 
-* 您的APP需要已经申请摄像头权限；
-* 如果您的APP是安卓版本，则需要能够响应webview的调起相机请求。如果您的APP尚未实现此功能，我们可以提供样例参考代码。 -->
-
-#### 2.3.1 生成清洁环境的 URL 
+#### 2.3.5 生成清洁环境的 URL 
 
 1. 使用接入方自行生成的 RSA 公私钥对中的私钥（公钥需要提前给到我方），对返回参数中的`redirectUrl`进行签名，得到`sign`字段。  
 
@@ -548,12 +533,12 @@ FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 String sign = sign(redirectUrl, 接入方私钥)；
 ```  
 
-2. 生成进入VDI页面完整URL：  
+2. 生成进入清洁环境取数页面完整URL：  
 
 * 把生成的签名拼接在redirectUrl后面。示例：   
 
 ```plain
-https://testing-vdi.<服务方域名>/vdi/vdi.html?daId=de1tuknz1500809629993668608&vcode=A86uXkYbIEwuFnr2y0ibZ9qjBGC3-X0D5HJKiylEMwA=&site=chsi&bizScenario=general&appId=de1tuknz&accessWay=sdk&fullUrl=true&sign=mGXan8cwSEpdoQaYU/wHD+Pos4Kxi+7NlLKvm3EcYaqUu8aJGqpgmmtfJqYSzhqhyPZw19iMGn16G9dd5ZzsYC3fNXYTRcn2jOmlFAPWGmi04WZGZUMt9d6uQy3Yfmlf7OLCFMFXDAFubv6QStuVegLYuBA2kdc4iMpqHcEOtT1YyL4fTepJRSiMQA21i+NE6Y8oxOaPj+qW7vl9RpK1dOxkio6eb6/c22IGVapwXHrKsOp1RoS+nO2ddk1MKFTYI9xsrPkry5LL2GCL80DEhinQ5uc90bgwd7Rh8tDm3qjxVdtVPZxAO2Bdic+4YGwJzoCyJ82NNf0dpmIzBbDgRw==
+https://testing-vdi.xxxx.xxx/vdi/vdi.html?daId=de1tuknz1500809629993668608&vcode=A86uXkYbIEwuFnr2y0ibZ9qjBGC3-X0D5HJKiylEMwA=&site=chsi&bizScenario=general&appId=de1tuknz&accessWay=sdk&fullUrl=true&sign=mGXan8cwSEpdoQaYU/wHD+Pos4Kxi+7NlLKvm3EcYaqUu8aJGqpgmmtfJqYSzhqhyPZw19iMGn16G9dd5ZzsYC3fNXYTRcn2jOmlFAPWGmi04WZGZUMt9d6uQy3Yfmlf7OLCFMFXDAFubv6QStuVegLYuBA2kdc4iMpqHcEOtT1YyL4fTepJRSiMQA21i+NE6Y8oxOaPj+qW7vl9RpK1dOxkio6eb6/c22IGVapwXHrKsOp1RoS+nO2ddk1MKFTYI9xsrPkry5LL2GCL80DEhinQ5uc90bgwd7Rh8tDm3qjxVdtVPZxAO2Bdic+4YGwJzoCyJ82NNf0dpmIzBbDgRw==
 ```
 
 3. 进入取证页面  
@@ -600,19 +585,21 @@ public class CryptoTool {
 }
 ```  
 
-#### 2.3.2 取数结束返回值的处理  
+#### 2.3.6 取数结束返回值的处理  
 
-* 当用户操作完成后，VDI 页面会打开接入方的结果页面，并带上bizNo、daId、daStatus、site，可能有attach_url及status
+* 当用户操作完成后，清洁环境页面会打开接入方的结果页面，并带上bizNo、daId、daStatus、site，可能有attach_url及status
 * 结果 URL 示例如下：  
 
 ```plain
 https://www.yyy.com/jumpChannel.html?attach_url=channel_a&bizNo=acf1700443444e7b9206c6d5b36ec955&daId=zd240e1e1722158295759228928&site=app-tax-income&daStatus=10
 ```  
 
-* site具体取值，见后文：[site取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)
-* daStatus 具体取值，见后文：[daStatus取值](/zh/access/appendix?id=_3-dastatus的可能取值)
+* site具体取值，见后文：[site取值](/zh/access/appendix?id=_2-支持的数据类型)
+* daStatus 具体取值，见后文：[daStatus取值](/zh/access/appendix?id=_5-dasubstatus枚举表格)
 
-#### 2.3.3 调用参数字段加密代码示例
+#### 2.3.7 代码示例
+
+调用参数字段加密代码示例
 
 ```
 @Test
@@ -639,44 +626,46 @@ public String encryptAES(String value, SecretKey key) throws Exception {
 }
 ```
 
-### 2.4 接入方拉取取证文件接口
+### 2.4 取数文件拉取接口
 
-通过这个接口，从我方后台拉取本次取证用户在清洁环境下载的文件。  
+#### 2.4.1 接口说明
+通过这个接口，从我方后台拉取本次取数用户在清洁环境下载的文件。  
 注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。
 
 * 下载地址失效时间为5分钟
-* 接口调用方式：  
+
+#### 2.4.2 接口路径
 
 |接口名|Method|Content-Type|
 |:----|:----|:----|
-|(测试环境)<br>https://testing-vdi.<服务方域名>/api/efp/get-original-files-x|post|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>/api/efp/get-original-files-x|post|application/json|
+|(测试环境)<br>https://testing-vdi.xxxx.xxx/api/efp/get-original-files-x|post|application/json|
+|(生产环境)<br>https://vdi.xxxx.xxx/api/efp/get-original-files-x|post|application/json|
 
-注：具体的服务方域名，请联系您的对接同学获取
+注：具体的域名，请联系您的对接人员获取
 
-* 请求：  
+#### 2.4.3 请求参数 
 
 |参数名|类型|说明|Required|长度|
 |:----|:----|:----|:----|:----|
 |v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
+|auth|Object|    |Y|    |
 |auth.appId|String|传入预先分配好的appId|Y|8|
 |auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
+|arg|Object|    |Y|    |
 |arg.daId|String|取证ID|Y|32|
-|arg.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
+|arg.ext|Object|备用字段，ext是一个对象，用于扩展|N|    |
 
-* 返回参数：  
+#### 2.4.4 返回参数  
 
 |参数|类型|说明|字段是否必定存在|    |
 |:----|:----|:----|:----|:----|
-|errorCode|int|结果的返回码：0:成功，非0失败（0仅仅代表本次请求成功，没有后台服务错误，不代表取证成功; 特别地，**如果还没有收到接入方发送的用户签署的协议证书文件，会返回一个特定的错误码**|Y|    |
+|errorCode|Int|结果的返回码：0:成功，非0失败（0仅仅代表本次请求成功，没有后台服务错误，不代表取证成功; 特别地，**如果还没有收到接入方发送的用户签署的协议证书文件，会返回一个特定的错误码**|Y|    |
 |errorMessage|String|返回结果描述|Y|    |
-|data|对象|    |对象|    |
+|data|Object|    |对象|    |
 |data.daId|String|取证ID|string|    |
 |data.bizNo|String|业务层流水号|Y|    |
-|data.fileUrl|数组|下载的源文件的url，是一个数组，表明可能有多个文件(pdf,csv或者xls等)。取证失败的话，该数组为空<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|Y|    |
-|data.site|String|用户访问的数据类型：[site的可能取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)|Y|    |
+|data.fileUrl|String[]|下载的源文件的url，是一个数组，表明可能有多个文件(pdf,csv或者xls等)。取证失败的话，该数组为空<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|Y|    |
+|data.site|String|用户访问的数据类型：[site的可能取值](/zh/access/appendix?id=_2-支持的数据类型)|Y|    |
 |data.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
 |data.ext.fileKey|String|文件下载解密的key<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|N|    |
 |data.ext.pdfPassword|数组|pdf密码（非身份证后6位的且有pdf密码的会返回）<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|N|    |
@@ -692,8 +681,8 @@ public String encryptAES(String value, SecretKey key) throws Exception {
 |-44021|DA_FAILED_EXCEPTION|此笔取证为终态失败的取证|终态，无需重试|
 
 
-**注意：**  
-1. **接口调用成功返回的url有效期为5分钟，所以需要在5分钟内完成文件下载，如果过期可再次调用此接口返回新的url。**
+注意： 
+**接口调用成功返回的url有效期为5分钟，所以需要在5分钟内完成文件下载，如果过期可再次调用此接口返回新的url。**
 
 
 * 返回示例  
@@ -714,7 +703,9 @@ public String encryptAES(String value, SecretKey key) throws Exception {
 }
 ```
 
-#### 2.4.1 回包字段解密代码示例
+#### 2.4.5 代码示例
+
+1. 回包字段解密代码示例
 
 ```java
 @Test
@@ -742,9 +733,9 @@ public String decryptAes(String base64EncryptedValue, SecretKey key) throws Exce
 }
 ```
 
-#### 2.4.2 文件下载示例代码
+2. 文件下载示例代码
 
-清洁环境后台云存储服务配置使用了文件存储服务端加密，则接口返回的fileKey字段不为空，需用上面方法解密为一个base64的key，和解密后的fileUrl一起使用下面的代码下载文件，和普通文件下载的区别是header多设置了3个文件下载解密的参数。
+清洁环境后台云存储服务配置使用了文件存储服务端加密，则接口返回的fileKey字段不为空，需用上面方法解密为一个base64的key和解密后的fileUrl一起使用下面的代码下载文件。 同普通文件下载的区别是header多设置了3个文件下载解密的参数。
 
 注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。
 
@@ -767,123 +758,36 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```
 
-<!-- ### 3.6 接入方拉取“存管证书”接口
 
-#### 3.6.1 接口说明
+### 2.5 数据类型状态拉取接口
 
-* 通过这个接口，从后台拉取本次取证的存管证书的下载地址  
-* 下载地址失效时间为5分钟  
-注：自2023年8月21日开始，随着业务量不断增大，为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果、存管证书），请及时拉取文件落库。
-* **接入方需要使用3.5.1、3.5.2相同的方式下载解析结果JSON并解密**  
-* 接口调用方式：  
-
-|接口名|Method|Content-Type|
-|:----|:----|:----|
-|(测试环境)<br> https://testing-vdi.<服务方域名>/api/efp/get-cert-result-x|POST|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>/api/efp/get-cert-result-x|POST|application/json|
-
-注：具体的服务方域名，请联系您的对接同学获取
-
-* 请求：  
-
-|参数名|类型|说明|Required|长度限制|
-|:----|:----|:----|:----|:----|
-|v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
-|auth.appId|String|传入预先分配好的appId|Y|8|
-|auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
-|arg.daId|String|取证ID|Y|32|
-|arg.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
-
-* 返回参数  
-
-|参数|类型|说明|Required|    |
-|:----|:----|:----|:----|:----|
-|errorCode|int|返回码：0成功，非0失败（0仅代表本次请求成功且没有后台服务错误，不代表业务逻辑成功）|Y|    |
-|errorMessage|String|返回结果描述|Y|    |
-|data|对象|    |Y|    |
-|data.daId|String|取证ID|Y|    |
-|data.bizNo|String|业务层流水号（fullminiapp方式无此返回）|Y|    |
-|data.certResult|Integer|存管证书生成结果（成功或者失败，取值见下）|Y|    |
-|data.certFileUrl[]|数组|存管证书列表，数组，每一个元素一个存管证书的下载url<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|Y|    |
-|data.ext|String|备用字段，ext是一个对象，用于扩展|N|    |
-|data.ext.fileKey|String|文件下载解密的key<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|N|    |
-
-* errorCode 可能情况  
-
-|错误码|错误信息|描述|错误码是否终态|
-|:----|:----|:----|:----|
-|0|    |成功|终态|
-|-44009<br>-43024|NO_DB_RECORD_EXCEPTION|daId不存在|非终态，需要重试|
-|-44028|DA_NOT_AUTHORIZED_EXCEPTION|用户未授权，所以接入方不能拉取用户的取证文件和存管证书|非终态，需要重试|
-|-44017|NOT_RECEIVED_USER_PROTOCOL_EXCEPTION|没有收到用户协议|非终态，需要重试|
-|-44007|GET_EVIDENCE_DETAILS_EXCEPTYION|上链还没成功，这个错误只影响拉取存管证书接口|非终态，需要重试|
-|-44062|DA_IN_PROGRESS_EXCEPTION|取证还在过程中|非终态，需要重试|
-|-44021|DA_FAILED_EXCEPTION|此笔取证为终态失败的取证|终态，无需重试|
-
- 
-
-#### 3.6.2 certResult 的可能取值
-
-|可能取值|描述|其他|
-|:----|:----|:----|
-|5|未生成存管证书|    |
-|10|生成存管证书成功|    |
-|100|生成存管证书失败|    |
-
-* 返回参数示例  
-
-```json
-{
-    "data": {
-        "daId": "de1uahd81493120767678877696",
-        "bizNo": "Acf5EBaefB9ErFWPHz",
-        "certResult": 10,
-        "certFileUrl": [
-            "ZjkJD3UrtkM8EOr70OrCJJhnZ9qU7//Og5cuKQldauVSvJPDlH4z85jKHlz2HVuJMr4PhXlcch5T5ZwCbkRgKAg9BRxpaQ9Yb77U9j730tq1L+OGW85FR3/5cXDuVPLEaTtGFWwprVuT8+sWDGX2IHAX1lFtUwaDiFyknTI+wU7FE7Afcl8b09m63PumFPWsl/kqeQIDpNk7o8TzGQpGojFDA2FJf7ksGPaYEdBtEoea8roSTFM4QoayC6ZcSMU0fcnWC59A3dfNgllEp0zK3UsCl4v3HJxLIlliVcMwN0vrfsAPb768wI6oycS3mhpSIM+M1l4N/4nctLKkE0LNn9YP0ODeJTbEnZ2lzjzMHUrOohwCJx5NYsevuBjHSuIj2UZgvqx01sG7xQi6V2GrrLXqvAG7zn6cGN3pHEoy3Ctf6FyeErLmtGNosmTL4ewCmD8ANk6I+eZKPt6KEJ2b0hBtIgnPGDcG4iwYCr+zOhkFjEmf25oDC3lYZtVrDa8ZcpE39tnR9RvqyD0k3lScHiTVQP6Tyl6GQIe9v1zGpkmqfeO/16gfuDu2xQiShr/Vz8wKl3zyaaKG3dD7lmTBubdiijN+GDhZPCL1GlgUPxWyHh8V1EYk1GIEB9q0Ql4trlXCbnEVv32hGPRTc51LxdXKK72WEMWx/+DEUAjvsKZ+YqDSq6KIgAPyl9xv5jRPL2cuczpv6gw6DYpjvFa7C47/9Vx6LC4PZvXRbz7XITs="
-        ],
-        "ext": {
-            "fileKey": "7pfdqjwnUAy2GZXHy02Pdxz2S6wZEp1U7wOzycwmoorRI4nkTz5jC+dXK6ORRuLS"
-        }
-    },
-    "errorCode": 0,
-    "errorMessage": "success"
-}
-```
-
-**注意：**  
-1. **部分数据类型如邮储和中行，此接口回包的fileUrl字段会返回两个或多个url，所以接入方在调用接口时需对此类数据类型的多个url进行下载和处理。**
-2. **接口调用成功返回的url有效期为5分钟，所以需要在5分钟内完成文件下载，如果过期可再次调用此接口返回新的url。**  
-注：自2023年8月21日开始，随着业务量不断增大，为了确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果、存管证书），请及时拉取文件并落库；超过10天的文件需要清洁环境后端服务方定期批量处理。 -->
-
-### 2.5 拉取当前数据类型状态的接口
+#### 2.5.1 接口说明
 
 * 说明：**通过这个接口，可以拉取到特定数据类型的运行情况【重要】**  
-* 由于数据官方网站可能维护/升级，导致短时间不可用，此接口用于业务方定期获知对应数据类型的可用状态。建议业务方：  
+* 由于数据官方网站可能维护/升级，导致短时间不可用，此接口用于接入方定期获知对应数据类型的可用状态。建议接入方：  
   1. **通过定时任务（cronjob）定期拉取数据类型可用状态，并保存此状态**，一般5min为佳，若用户量较大，可提高频率  
   2. **依据本地保存的site可用状态，在业务入口页面通过开关控制显示/隐藏对应site的用户入口**
 
-* 接口调用方式：  
+#### 2.5.2 接口路径  
 
 |接口名|Method|Content-Type|
 |:----|:----|:----|
-|(测试环境)<br>https://testing-vdi.<服务方域名>/api/config/get-sites-state|POST|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>/api/config/get-sites-state|POST|application/json|
+|(测试环境)<br>https://testing-vdi.xxxx.xxx/api/config/get-sites-state|POST|application/json|
+|(生产环境)<br>https://vdi.xxxx.xxx/api/config/get-sites-state|POST|application/json|
 
-注：具体的服务方域名，请联系您的对接同学获取
+注：具体的域名，请联系您的对接人员获取
 
-* 请求：  
+#### 2.5.3 请求参数  
 
 |参数名|类型|说明|Required|长度限制|
 |:----|:----|:----|:----|:----|
 |v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
+|auth|Object|    |Y|    |
 |auth.appId|String|传入预先分配好的appId|Y|8|
 |auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
-|arg.sites|数组|所需的数据类型的状态，数组，传入所有需要拉取状态的数据类型。[site的可能取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)|Y|    |
-|arg.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
+|arg|Object|    |Y|    |
+|arg.sites|String[]|所需的数据类型的状态，数组，传入所有需要拉取状态的数据类型。[site的可能取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)|Y|    |
+|arg.ext|Object|备用字段，ext是一个对象，用于扩展|N|    |
 
 * 请求示例  
 
@@ -900,7 +804,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```  
 
-* 返回参数  
+#### 2.5.4 返回参数  
 
 |参数|类型|说明|Required|
 |:----|:----|:----|:----|
@@ -929,27 +833,29 @@ void testDownloadUsingPresignedUrl() throws Exception{
 
 ### 2.6 取数状态拉取接口
 
-* 说明：通过这个接口，可以拉取到特定取证业务运行状态  
+#### 2.6.1 接口说明
+
+* 说明：通过这个接口，可以拉取到特定取数业务运行状态  
 * 接口调用方式：  
 
 |接口名|Method|Content-Type|
 |:----|:----|:----|
-|(测试环境)<br>https://testing-vdi.<服务方域名>/api/das/get-da-status|POST|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>/api/das/get-da-status|POST|application/json|
+|(测试环境)<br>https://testing-vdi.xxxx.xxx/api/das/get-da-status|POST|application/json|
+|(生产环境)<br>https://vdi.xxxx.xxx/api/das/get-da-status|POST|application/json|
 
-注：具体的服务方域名，请联系您的对接同学获取
+注：具体的域名，请联系您的对接人员获取
 
-* 请求  
+#### 2.6.2 请求参数
 
 |参数名|类型|说明|Required|长度限制|
 |:----|:----|:----|:----|:----|
 |v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
+|auth|Object|    |Y|    |
 |auth.appId|String|传入预先分配好的appId|Y|8|
 |auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
+|arg|Object|    |Y|    |
 |arg.daId|String|daId|Y|32|
-|arg.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
+|arg.ext|Object|备用字段，ext是一个对象，用于扩展|N|    |
 
 * 请求示例  
 
@@ -966,24 +872,23 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```  
 
-* 返回参数：  
+#### 2.6.3 返回参数  
 
 |参数|类型|说明|Required|
 |:----|:----|:----|:----|
-|errorCode|int|返回码：0成功，非0失败（0仅代表本次请求成功且没有后台服务错误，不代表业务逻辑成功）|Y|
+|errorCode|Int|返回码：0成功，非0失败（0仅代表本次请求成功且没有后台服务错误，不代表业务逻辑成功）|Y|
 |errorMessage|String|返回结果描述|Y|
-|data|对象|    |Y|
-|data.daStatus|int|用户占用的VDI机器的状态值，详见：[daStatus的可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)。如果用户在文件下载过程中，退出了VDI，在文件下载完成之前，是无法进入另外一台VDI的，必须等下载任务完成后，才能新打开VDI|Y|
+|data|Object|    |Y|
+|data.daStatus|Int|用户取数的状态值，详见：[daStatus的可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|Y|
 |data.browsingSite|String|用户取证访问站点|Y|
 |data.daId|String|取证ID|Y|
 |data.bizNo|String|接入方流水号|Y|
 |data.jsonResult|Int|文件解析状态|Y|
 |data.appId|String|接入方的appId|Y|
 |data.authorizedTs|Long|用户的完成授权的时间戳，单位是毫秒，值为 0 表示未授权。未授权的用户，接入方是不会拉取到用户的文件的。因此，可以判断authorizedTs > 0，确认状态无误即可下载。|Y|
-|data.ext|对象|    |N|
-|data.ext.daSubStatus|Int|子结束码。如果用户访问取数失败，具体的出错原因，其枚举值见[9. daSubStatus枚举表格](/zh/access/appendix?id=_9-dasubstatus枚举表格) <br>非必有，如果接入方需要配置此功能，请告知。|N|
-|data.ext.childDaList|对象|非必有，如果接入方要求配置此功能，请告知。<br>展示子site的每一笔订单的详情，详见下述实例。|N|
-<!-- |data.certResult|Int|存管证书状态|Y| -->
+|data.ext|Object|    |N|
+|data.ext.daSubStatus|Int|子结束码。如果用户访问取数失败，具体的出错原因，其枚举值见[daSubStatus枚举表格](/zh/access/appendix?id=_9-dasubstatus枚举表格) <br>非必有，如果接入方需要配置此功能，请告知。|N|
+|data.ext.childDaList|Object|非必有，如果接入方要求配置此功能，请告知。<br>展示子site的每一笔订单的详情，详见下述实例。|N|
 
 * 特殊错误码  
 
@@ -1001,7 +906,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
         "daId": "de1jvbe11492495098561302528",
         "daStatus": 10,
         "appId": "de1jvbe1",
-        "browsingSite": "chsi",
+        "browsingSite": "xxxx",
         "bizNo": "we1386584661349863900",
         "jsonResult": 10,
         "certResult": 10,
@@ -1022,7 +927,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
         "daId":"zd20kldt1691346833000402944",
         "daStatus":10,
         "appId":"zd20kldt",
-        "browsingSite":"app-alipay-any",
+        "browsingSite":"app-xxxx-any",
         "bizNo":"1692083483002",
         "jsonResult":10,
         "certResult":10,
@@ -1031,19 +936,19 @@ void testDownloadUsingPresignedUrl() throws Exception{
             "childDaList":[
                 {
                     "daId":"zd20kldt1691346833000402944-0",
-                    "site":"app-alipay-huabei",
+                    "site":"app-xxxx-xxxx",
                     "daStatus":10,
                     "daSubStatus":null
                 },
                 {
                     "daId":"zd20kldt1691346833000402944-1",
-                    "site":"app-alipay-cr",
+                    "site":"app-xxxx-xxxx",
                     "daStatus":10,
                     "daSubStatus":null
                 },
                 {
                     "daId":"zd20kldt1691346833000402944-2",
-                    "site":"app-alipay-jiebei",
+                    "site":"app-xxxx-xxxx",
                     "daStatus":10,
                     "daSubStatus":null
                 }
@@ -1054,78 +959,30 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```
 
-<!-- ### 3.9 接入方设置可以进入清洁环境的用户白名单
+### 2.7  日对账单拉取接口  
 
-* 说明：当接入方的用户直接依赖清洁环境后端服务方的二维码进入清洁环境，可以通过这个接口设置可以使用清洁环境的用户白名单。  
-* 本接口仅在接入方使用独立小程序方式接入时需要调用。  
-* 接口调用方式：  
-
-|接口名|Method|Content-Type|
-|:----|:----|:----|
-|(测试环境)<br>https://testing-vdi.<服务方域名>/api/admin/sbox-whitelist-x|POST|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>/api/admin/sbox-whitelist-x|POST|application/json|
-
-注：具体的服务方域名，请联系您的对接同学获取
-
-* 请求：  
-
-|参数名|类型|说明|Required|长度限制|
-|:----|:----|:----|:----|:----|
-|v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
-|auth.appId|String|传入预先分配好的appId|Y|8|
-|auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
-|arg.wl|数组|    |Y|    |
-|arg.wl[].idNo|String|使用VDI的用户的身份证号。**接入方需要首先对身份证号进行合法性验证，对不符合身份证号码格式和位数的请求予以拒绝。**<br><br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
-|arg.wl[].userId|String|接入方为这个用户设置的代表这个用户的 ID，用于匹配这个用户；接入方保证userId能唯一映射到这个用户的身份证号码，因为 notify 通知里面不会回传用户的身份证号，只会回传这个userId用于匹配用户<br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|64|
-|arg.wl[].userName|String|用户做完接入方KYC的真实姓名，用户在清洁环境页面显示。需要使用aesKey进行加密。<br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
-|arg.wl[].action|String|add 表明表明添加白名单（重复添加，返回已经存在的错误）; del 表明删除白名单;|Y|    |
-|arg.wl[].sites|Array|目前未使用|Y|    |
-
-* 返回参数：  
-
-|参数|类型|说明|Required|
-|:----|:----|:----|:----|
-|errorCode|int|返回码：0成功，非0失败<br>-53022 新增时idNo已存在<br>-53028 新增时userId已存在<br>-53023 删除时发现idNo不存在<br>注意：本接口是先检查再执行。如果返回码不是0，所有的新增、删除都不会执行，需要把请求内容改好后重试|Y|
-|errorMessage|String|返回结果描述（如果新增或删除失败，会返回具体哪一条失败。如果身份证号不存在，就返回userId；否则会返回身份证号）|Y|
-
-* 返回示例  
-
-```json
-{
-    "errorCode": 0,
-    "errorMessage": "success"
-}
-{
-    "data": null,
-    "errorCode": -53022,
-    "errorMessage": "421181198908185818 idNo已存在，请核查!"
-}
-``` -->
-
-### 2.7  接入方维度日终对账单拉取接口  
+#### 2.7.1 接口说明
 
 说明：每日凌晨3点半，会生成T-1日的接入方维度的日终对账单，供下载做对账使用。对账单接口至关重要。
 
-接口调用方式：
+#### 2.7.2 接口路径
 
 |接口名|Method|Content-Type|
 |:----|:----|:----|
-|(测试环境)<br>[https://testing-vdi.](https://testing-vdi.zdgzc.com/api/efp/get-recon-file)[<服务方域名>](https://testing-vdi.zdgzc.com/api/efp/get-recon-file)[/api/efp/get-appid-recon-file](https://testing-vdi.zdgzc.com/api/efp/get-recon-file)|POST|application/json|
-|(生产环境)<br>[https://vdi.](https://vdi.zdgzc.com/api/efp/get-recon-file)[<服务方域名>](https://vdi.zdgzc.com/api/efp/get-recon-file)[/api/efp/get-appid-recon-file](https://vdi.zdgzc.com/api/efp/get-recon-file)|POST|application/json|
+|(测试环境)<br> https://testing-vdi.xxxx.xxx/api/efp/get-recon-file|POST|application/json|
+|(生产环境)<br>https://vdi.xxxx.xxx/api/efp/get-recon-file|POST|application/json|
 
-注：具体的服务方域名，请联系您的对接同学获取
+注：具体的域名，请联系您的对接人员获取
 
-* 请求：  
+#### 2.7.3 请求参数
 
 |参数名|类型|说明|Required|长度限制|
 |:----|:----|:----|:----|:----|
 |v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
+|auth|Object|    |Y|    |
 |auth.appId|String|传入预先分配好的appId|Y|8|
 |auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
+|arg|Object|    |Y|    |
 |arg.date|String|日期，格式为yyyymmdd，举例：20220801,此处需传入T-1的对账日期|Y|8|
 
 * 请求示例  
@@ -1143,13 +1000,13 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```
 
-* 返回参数：  
+#### 2.7.4 返回参数  
 
 |参数|类型|说明|Required|
 |:----|:----|:----|:----|
-|errorCode|int|返回码：0成功，非0失败|Y|
+|errorCode|Int|返回码：0成功，非0失败|Y|
 |errorMessage|String|返回结果描述|Y|
-|data|对象|    |Y|
+|data|Object|    |Y|
 |data.fileUrl|String|下载的对账文件的url。|Y|
 
 * 返回示例  
@@ -1179,65 +1036,63 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |access_way|接入方式|
 |da_status|取证状态码|
 |da_sub_status|取证子状态码|
-|json_result|文件解析的状态（取值见下）|
+|json_result|文件解析的状态|
 |authorize_time|授权时间戳，>0L代表有值|
 |charge_flag|Y代表计费，N代表不计费|
 |charge_package|Y代表使用流量包内条数计费，N代表不使用流量包内条数计费|
 |user_protocol_upload_flag|Y代表已上传用户协议，N代表未上传|
 |create_time|取证订单创建时间|
-<!-- |cert_result|证书的状态（取值见下）| -->
-<!-- |original_site|取证的原数据类型，仅在丰巢模式切换到邮箱模式时会有值| -->
 
 
 ### 2.8 “取数解析文件”拉取接口
 
-注：  
+#### 2.8.1 接口说明
+
 1. 因我方不会对数据做加工，现阶段解析后的JSON为对于原文 1：1的还原解析，格式仅支持string形式，不包含枚举、数值、字符、布尔等其他类型，如业务方需要对JSON格式重新定义，需要自行转换格式。  
 2. 未来可能出于合规性考量，有一定概率不提供解析服务，需本地部署。
 
 建议：我方可提供解析代码，由业务方部署在本地，收到取数原文后，在本地运行解析。建议技术能力充分的情况下本地部署。
 
-#### 2.8.1 接口说明
 
 * 通过这个接口，从后台拉取本次取证的结果（成功或者失败），及文件的解析后的结构化数据下载地址（如有）  
 * 下载地址失效时间为5分钟  
-* **接入方需要使用3.5.1、3.5.2相同的方式下载解析结果并解密**  
+* **接入方需要使用对下载的解析结果进行解密**  
 注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。  
 
-* 接口调用方式：  
+#### 2.8.2 接口路径  
 
 |接口名|Method|Content-Type|
 |:----|:----|:----|
-|(测试环境)<br> [https://testing-vdi.<服务方域名>/api/efp/get-parse-result-x|POST|application/json|
-|(生产环境)<br>[https://vdi.<服务方域名>/api/efp/get-parse-result-x|POST|application/json|
+|(测试环境)<br> https://testing-vdi.xxxx.xxx/api/efp/get-parse-result-x|POST|application/json|
+|(生产环境)<br>https://vdi.xxxx.xxx/api/efp/get-parse-result-x|POST|application/json|
 
-注：具体的服务方域名，请联系您的对接同学获取
+注：具体的域名，请联系您的对接人员获取
 
-* 请求：  
+#### 2.8.3 请求参数
 
 |参数名|类型|说明|Required|长度|
 |:----|:----|:----|:----|:----|
 |v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
+|auth|Object|    |Y|    |
 |auth.appId|String|传入预先分配好的appId|Y|8|
 |auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
+|arg|Object|    |Y|    |
 |arg.daId|String|取证ID|Y|32|
-|arg.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
+|arg.ext|Object|备用字段，ext是一个对象，用于扩展|N|    |
 
-* 返回参数：  
+#### 2.8.4 返回参数  
 
 |参数|类型|说明|字段是否必定存在|
 |:----|:----|:----|:----|
-|errorCode|int|结果的返回码：0:成功，非0失败（0仅仅代表本次请求成功，没有后台服务错误，不代表取证成功; 特别地，**如果还没有收到接入方发送的用户签署的协议证书文件，会返回一个特定的错误码**|Y|
+|errorCode|Int|结果的返回码：0:成功，非0失败（0仅仅代表本次请求成功，没有后台服务错误，不代表取证成功; 特别地，**如果还没有收到接入方发送的用户签署的协议证书文件，会返回一个特定的错误码**|Y|
 |errorMessage|String|返回结果描述|Y|
-|data|对象|    |对象|
+|data|Object|    |对象|
 |data.daId|String|取证ID|string|
 |data.bizNo|String|业务层流水号|Y|
-|data.**jsonResult**|int|文件解析的状态（取值见下）|Y|
+|data.jsonResult|Int|文件解析的状态（取值见下）|Y|
 |data.jsonFileUrl|String|PDF等文件对应的结构化数据，数组，每一个元素对应一个文件的结构化数据<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|Y|
 |data.site|String|用户访问的site|Y|
-|data.ext|对象|备用字段，ext是一个对象，用于扩展|Y|
+|data.ext|Object|备用字段，ext是一个对象，用于扩展|Y|
 |data.ext.fileKey|String|文件下载解密的key<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|optional|
 
 
@@ -1254,7 +1109,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |-44062|DA_IN_PROGRESS_EXCEPTION|取证还在过程中；若此时daStatus=10，则为解析尚未完成|非终态，需要重试|
 |-44021|DA_FAILED_EXCEPTION|此笔取证为终态失败的取证|终态，无需重试|
 
-#### 2.8.2 jsonResult的可能取值
+* jsonResult的可能取值
 
 |取值|其他|
 |:----|:----|
@@ -1265,14 +1120,6 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |13|企业版数据类型解析的公司名称与传入名称不匹配|
 |100|非终态，可恢复|
 |101|终态的失败|
-
-#### 2.8.3 dlResult 的可能取值
-
-|取值|描述|其他|
-|:----|:----|:----|
-|10|下载成功|    |
-|100|下载失败|    |
-|400|数据类型网站上没有这个交易文件|    |
 
 
 * 返回示例  
@@ -1303,329 +1150,8 @@ void testDownloadUsingPresignedUrl() throws Exception{
 
 注：为了确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等文件），请及时拉取文件并落库；超过10天的文件需要清洁环境后端服务方定期批量处理。  
 
-<!-- 
-### 3.12 拉取微信外H5跳转小程序URL接口（只对特定accessway开放）
 
-#### 3.12.1 接口说明
 
-* 此接口仅供accessway = h52miniapp 或 h52miniappwithca 情况下需要调用  
-* 由于微信平台的限制，在微信外H5跳转小程序的场景下，在用start-vdi-miniapp-x拿到小程序跳转redirectUrl后并做签名后，无法直接跳转到小程序。参考微信小程序关于[获取 URL Link](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/url-link.html)接口的描述  
-* 此接口的三个参数：对start-vdi-miniapp-x返回的redirectURL做好签名后，把？（问号）前面的部分作为path，后面的部分作为query，并加上daId参数，来调用这个接口  
-
-* 接口调用方式：  
-
-|接口名|Method|Content-Type|
-|:----|:----|:----|
-|(测试环境)<br> https://testing-vdi.<服务方域名>/api/das/generate-url-link|POST|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>/api/das/generate-url-link|POST|application/json|
-
-注：具体的服务方域名，请联系您的对接同学获取
-
-* 请求：  
-
-|参数名|类型|说明|Required|长度|
-|:----|:----|:----|:----|:----|
-|v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
-|auth.appId|String|传入预先分配好的appId|Y|8|
-|auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
-|arg.daId|String|取证ID|Y|32|
-|arg.path|String|start-vdi-miniapp-x接口返回的redirectUrl里的path部分( ？前面的部分）|Y|    |
-|arg.query|String|start-vdi-miniapp-x接口返回的redirectUrl里的参数（？后面的部分,带签名）|    |    |
-
-* 请求示例  
-
-```json
-{
-    "v":"1.0.0",
-    "auth":{
-        "appId": "appid1",
-        "nonce": "RandomCode.getRandomString(32)"
-    },
-    "arg":{
-        "daId": "de1tuknz1500809629993668608",
-        "path": "pages/vdi/vdi",
-        "query":"daId=de1tuknz1500809629993668608&vcode=vnLoTSazp7-n6W3vOtioPkU1RQHneTlrQ43Ii4QFVXg%3D&site=tax&appId=de3AtDFY&bizScenario=general&accessWay=miniapp&fullUrl=true&sign=tR2vuBjqGasXKvXlP7wTjU5dL53iQU%2F9qeCjOepqTKoTv4RyO5dLIlvnyjRclOEY1j5lb1sBIkPd3C20IBSJDoz3%2BY9knNcBX0%2FCloNxAxnOsnCqtuNkferW%2BfZzbgOyGvTDEbZ%2Fmqe6BXco%2BOCyE%2FqNF0hAj7lMIn76Hb3IpzMz0%2FC0lg7rko3gm7JURB%2BQoKeTv3m7hGLXRSwjSsWZDOHNZSq5csn9Do1Q81FzoAmwJbXKkma0DzeyQvjYheGC%2BF2SrNe3NccXh59VTkCI%2FwykEp7Zl2XgHOPu8KLGrUN68b5QERlhOC9VSM8EueAOordlYHlW8Sy6JTWr%2FZEqxQ%3D%3D"
-    }
-}
-```
-
-* 返回参数：  
-
-|参数|类型|说明|字段是否必定存在|
-|:----|:----|:----|:----|
-|errorCode|int|结果的返回码：0:成功，非0失败（0仅仅代表本次请求成功，没有后台服务错误，不代表取证成功|Y|
-|errorMessage|String|返回结果描述|Y|
-|data|对象|返回结果(如果调用失败返回null)|N|
-|data.daId|String|取证Id|N|
-|data.url_link|String|微信开放平台返回的跳转的URL链接|N|
-
-* 返回示例  
-
-```json
-{
-    "data": {
-        "daId": "de1tuknz1500809629993668608",
-        "url_link": "https://wxaurl.cn/pFawq35qbfd"
-    },
-    "errorCode": 0,
-    "errorMessage": "success"
-}
-```   -->
-
-<!-- ### 3.13 获取取证index页URL接口（只对特定接入渠道开放）
-
-* 接口说明：  
-获取取证index页URL
-
-* 接口调用方式：  
-
-|接口名|Method|Content-Type|
-|:----|:----|:----|
-|(测试环境)<br>https://testing-vdi.<服务方域名>/api/das/get-index-page-url|POST|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>.com/api/das/get-index-page-url|POST|application/json|
-
-* 请求：  
-
-|参数名|类型|说明|Required|长度限制|
-|:----|:----|:----|:----|:----|
-|v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
-|auth.appId|String|传入预先分配好的appId|Y|32|
-|auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
-|arg.bizScenario|String|业务类型，接入方直接填 general|Y|32|
-|arg.bizNo|String|业务流水号|N|60|
-|arg.openId|String|接入方中用户的身份标识，用于定位本次VDI使用的用户<br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
-|arg.idNo|String|使用VDI的用户的身份证号。**接入方需要首先对身份证号进行合法性验证，对不符合身份证号码格式和位数的请求予以拒绝。**<br><br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
-|arg.userName|String|用户做完接入方KYC的真实姓名，显示在清洁环境页面。<br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
-|arg.accessWay|String|[accessWay可能取值](/zh/access/appendix?id=_4-accessway可能取值)|Y|    |
-
-* get-page-index-url接口请求参数示例  
-
-```json
-{
-    "v": "1.0.0",
-    "auth": {
-        "appId": "appid1",
-        "nonce": "RandomCode.getRandomString(32)"
-    },
-    "arg": {
-        "accessWay": "miniapp",
-        "bizScenario": "general",
-        "bizNo": "we1386584661349863900",
-        "userId": "YUIQMwxnnDCkcqxhkXKxfsonbNSlxK",
-        "idNo": "CgTQVFABGQMwxnnDCkcqxhkXKxfsonbNSlxK",
-        "userName": "IYTQMwxnnDCkcqxhkXKxfsonbNSlxK",
-        "userClaim": "该用户已完成刷脸身份认证",
-        "ua": "xxxx",
-    }
-}
-```
-
-* 返回参数：  
-
-|参数|类型|说明|Required|
-|:----|:----|:----|:----|
-|errorCode|int|结果的返回码：0:成功，非0失败|Y|
-|errorMessage|String|返回结果描述|Y|
-|data|对象|返回结果(如果调用失败返回null)|Y|
-|data.sessionId|String|本次取证的ID|Y|
-|data.redirectUrl|String|h5跳转的url或小程序跳转path|Y|
-|data.mpAppId|String|跳转小程序的appId（小程序接入有效）|N|
-
-* 特殊错误码  
-
-|错误码|错误信息|描述|
-|:----|:----|:----|
-|-43037|AES_DECRYPT_EXCEPTION|AES解密失败，请使用最新的AES密钥|
-|-45030|StartParamIdNoLessError|身份证号码小于18岁|
-|-45031|StartParamIdNoError|身份证号码格式错误|
-|-45028|IdNoDailyRequestError|当日总访问次数超限|
-|-45032|IdNoCurrentRequestError|用户访问过于频繁，请稍后再试|
-|-50001|进入小程序后提示，小程序通用错误|按照以下内容项排查：<br>- 检查sign算法及相关代码<br>- 检查公私钥对是否配置正确<br>- 检查是否填对了清洁环境的小程序id<br>- 检查前端指定的envVersion（生产应保持release，测试为trial）<br>- 检查appId是否在跳转时候填对了，且和生成跳转链接时一致|
-|-50006|进入小程序后提示，sign计算错误|按照以下内容项排查：<br>-小程序是否跳对，是否envVersion改对<br>-公钥是否给对，是否配置对<br>-公钥在测试环境是否测试无问题|
-
-* 返回参数示例  
-
-```json
-{
-    "errorCode": 0,
-    "errorMessage": "succ",
-    "data": {
-        "sessionId":"de1tuknz1500809629993668608",
-        "redirectUrl": "pages/vdi/vdi/?daId=de1tuknz1500809629993668608&vcode=vnLoTSazp7-n6W3vOtioPkU1RQHneTlrQ43Ii4QFVXg%3D&site=tax&appId=de3AtDFY&bizScenario=general&accessWay=miniapp&fullUrl=true",
-        "mpAppId": "wx73a4bdd6ff058974"
-    }
-}
-```
-
-注：当返回errorCode为0，sessionId和redirectUrl不为空，方可跳转进入清洁环境小程序
-
-注：生成的链接，有效期为8min（sessionId过期时间），若超过此时间未点击进入，会提示过期；
-
-#### 3.13.1 如何进入清洁环境h5页面或者小程序
-
-1. 使用接入方自行生成的 RSA 公私钥对中的私钥（公钥需要提前给到清洁环境），对返回参数中的`redirectUrl`进行签名，得到`sign`字段。sign生成方法参考 [3.2.1.1 生成签名字段](/zh/access/main?id=_3211-生成签名字段)   
-
-```java
-String sign = sign(redirectUrl, 接入方私钥)；
-```    
-
-
-2. 生成进入VDI页面完整URL：  
-* 把生成的签名拼接在redirectUrl后面。示例：   
-
-```plain
-https://testing-vdi.<服务方域名>.com/vdi/vdi.html?sessionId=de1tuknz1500809629993668608&vcode=A86uXkYbIEwuFnr2y0ibZ9qjBGC3-X0D5HJKiylEMwA=&site=chsi&bizScenario=general&appId=de1tuknz&accessWay=sdk&fullUrl=true&sign=mGXan8cwSEpdoQaYU/wHD+Pos4Kxi+7NlLKvm3EcYaqUu8aJGqpgmmtfJqYSzhqhyPZw19iMGn16G9dd5ZzsYC3fNXYTRcn2jOmlFAPWGmi04WZGZUMt9d6uQy3Yfmlf7OLCFMFXDAFubv6QStuVegLYuBA2kdc4iMpqHcEOtT1YyL4fTepJRSiMQA21i+NE6Y8oxOaPj+qW7vl9RpK1dOxkio6eb6/c22IGVapwXHrKsOp1RoS+nO2ddk1MKFTYI9xsrPkry5LL2GCL80DEhinQ5uc90bgwd7Rh8tDm3qjxVdtVPZxAO2Bdic+4YGwJzoCyJ82NNf0dpmIzBbDgRw==
-```
-
-3. 进入取证页面  
-* 通过第2步生成的URL，直接进入取证h5页面或者跳转到小程序  
-
-
-4. 代码示例  
-参考 [3.3.1 如何生成跳转到VDI的 URL](/zh/access/main?id=_331-如何生成跳转到vdi的-url) 
-
-#### 3.13.2 调用前对参数字段加密代码示例  
-
-参考 [3.3.3 调用前对参数字段加密代码示例](/zh/access/main?id=_333-调用前对参数字段加密代码示例) 
-
-### 3.14 拉取h5跳转独立小程序入口URL （只对特定接入方开放）
-
-* 接口说明：  
-获取h5跳转独立小程序URL接口
-
-* 接口调用方式：  
-
-|接口名|Method|Content-Type|
-|:----|:----|:----|
-|(测试环境)<br>https://testing-vdi.<服务方域名>/api/das/get-h52fullminiapp-url|POST|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>.com/api/das/get-h52fullminiapp-url|POST|application/json|
-
-* 请求：  
-
-|参数名|类型|说明|Required|长度限制|
-|:----|:----|:----|:----|:----|
-|v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
-|auth.appId|String|传入预先分配好的appId|Y|32|
-|auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
-|arg.bizToken|String|本次取证用的token，本地生成|Y|128|
-|arg.bizScenario|String|业务类型，接入方直接填 general|N|32|
-|arg.bizNo|String|业务流水号|N|60|
-
-* get-fullminiapp-url接口请求参数示例  
-
-```json
-{
-    "v": "1.0.0",
-    "auth": {
-        "appId": "appid1",
-        "nonce": "RandomCode.getRandomString(32)"
-    },
-    "arg": {
-        "bizScenario": "general",
-        "bizNo": "we1386584661349863900",
-        "bizToken": "AFifdfdiFFDFSFSDFDFDF"
-    }
-}
-```
-
-* 返回参数：  
-
-|参数|类型|说明|Required|
-|:----|:----|:----|:----|
-|errorCode|int|结果的返回码：0:成功，非0失败|Y|
-|errorMessage|String|返回结果描述|Y|
-|data|对象|返回结果(如果调用失败返回null)|Y|
-|data.redirectUrl|String|小程序跳转链接|Y|
-
-* 特殊错误码  
-
-|错误码|错误信息|描述|
-|:----|:----|:----|
-|-50001|进入小程序后提示，小程序通用错误|按照以下内容项排查：<br>- 检查sign算法及相关代码<br>- 检查公私钥对是否配置正确<br>- 检查是否填对了清洁环境的小程序id<br>- 检查前端指定的envVersion（生产应保持release，测试为trial）<br>- 检查appId是否在跳转时候填对了，且和生成跳转链接时一致|
-|-50006|进入小程序后提示，sign计算错误|按照以下内容项排查：<br>-小程序是否跳对，是否envVersion改对<br>-公钥是否给对，是否配置对<br>-公钥在测试环境是否测试无问题|
-
-
-* 返回参数示例  
-
-```json
-{
-    "errorCode": 0,
-    "errorMessage": "succ",
-    "data": {
-        "redirectUrl": "https://wxaurl.cn/OG6EkOuAldi"
-    }
-}
-```  
-
-注：当返回errorCode为0，sessionId和redirectUrl不为空，方可跳转进入清洁环境小程序 -->
-
-<!-- ### 3.15 接入方拉取特殊“用户协议”接口（只对特定接入方开放）
-
-* 接口说明  
-通过这个接口，从后台拉取本次取证的特殊用户协议的下载地址  
-下载地址失效时间为5分钟
-
-* 接口调用方式：  
-
-|接口名|Method|Content-Type|
-|:----|:----|:----|
-|(测试环境)<br>https://testing-vdi.<服务方域名>/api/efp/get-user-protocol-x|POST|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>/api/efp/get-user-protocol-x|POST|application/json|
-
-注：具体的服务方域名，请联系您的对接同学获取
-
-* 请求：  
-
-|参数名|类型|说明|Required|长度限制|
-|:----|:----|:----|:----|:----|
-|v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
-|auth.appId|String|传入预先分配好的appId|Y|8|
-|auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
-|arg.daId|String|取证ID|Y|32|
-
-* 返回参数  
-
-|参数|类型|说明|Required|    |
-|:----|:----|:----|:----|:----|
-|errorCode|int|返回码：0成功，非0失败（0仅代表本次请求成功且没有后台服务错误，不代表业务逻辑成功）|Y|    |
-|errorMessage|String|返回结果描述|Y|    |
-|data|对象|    |Y|    |
-|data.protocolFileUrl|String[]|特殊用户协议的的下载url<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|Y|    |
-|data.ext|String|备用字段，ext是一个对象，用于扩展|N|    |
-|data.ext.fileKey|String|文件下载解密的key<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|N|    |
-
-* errorCode 可能情况  
-
-|错误码|错误信息|描述|错误码是否终态|
-|:----|:----|:----|:----|
-|0|    |成功|终态|
-|-44009|NO_DB_RECORD_EXCEPTION|daId不存在|非终态，需要重试|
-|    |    |    |    |
-
-* 返回参数示例  
-
-```json
-{
-    "data": {
-        "protocalFileUrl": 
-            "ZjkJD3UrtkM8EOr70OrCJJhnZ9qU7//Og5cuKQldauVSvJPDlH4z85jKHlz2HVuJMr4PhXlcch5T5ZwCbkRgKAg9BRxpaQ9Yb77U9j730tq1L+OGW85FR3/5cXDuVPLEaTtGFWwprVuT8+sWDGX2IHAX1lFtUwaDiFyknTI+wU7FE7Afcl8b09m63PumFPWsl/kqeQIDpNk7o8TzGQpGojFDA2FJf7ksGPaYEdBtEoea8roSTFM4QoayC6ZcSMU0fcnWC59A3dfNgllEp0zK3UsCl4v3HJxLIlliVcMwN0vrfsAPb768wI6oycS3mhpSIM+M1l4N/4nctLKkE0LNn9YP0ODeJTbEnZ2lzjzMHUrOohwCJx5NYsevuBjHSuIj2UZgvqx01sG7xQi6V2GrrLXqvAG7zn6cGN3pHEoy3Ctf6FyeErLmtGNosmTL4ewCmD8ANk6I+eZKPt6KEJ2b0hBtIgnPGDcG4iwYCr+zOhkFjEmf25oDC3lYZtVrDa8ZcpE39tnR9RvqyD0k3lScHiTVQP6Tyl6GQIe9v1zGpkmqfeO/16gfuDu2xQiShr/Vz8wKl3zyaaKG3dD7lmTBubdiijN+GDhZPCL1GlgUPxWyHh8V1EYk1GIEB9q0Ql4trlXCbnEVv32hGPRTc51LxdXKK72WEMWx/+DEUAjvsKZ+YqDSq6KIgAPyl9xv5jRPL2cuczpv6gw6DYpjvFa7C47/9Vx6LC4PZvXRbz7XITs="
-        ,
-        "ext": {
-            "fileKey": "7pfdqjwnUAy2GZXHy02Pdxz2S6wZEp1U7wOzycwmoorRI4nkTz5jC+dXK6ORRuLS"
-        }
-    },
-    "errorCode": 0,
-    "errorMessage": "success"
-}
-``` -->
 
 
 ## 3 通知接入方的相关接口说明
@@ -1633,10 +1159,8 @@ https://testing-vdi.<服务方域名>.com/vdi/vdi.html?sessionId=de1tuknz1500809
 
 用户取证是异步流程，由清洁环境后端服务进行处理之后使用通知方式，调用接入方预先配置给清洁环境后端的接口（单一接口），来异步通知接入方业务进度。
 
-注：v2格式的通知目前在试运行状态，如有需求可联系您的对接产品经理。v2通知和原版通知的区别在于：
 
-<!-- * func含四个字段（之前版本仅2个）：取证失败、取证完成且授权成功、解析成功、存管证书生成成功。 -->
-* func含几个字段（之前版本仅2个）：取证失败、取证完成且授权成功、解析成功。
+* func含几个字段：取证失败、取证完成且授权成功、解析成功。
 * 通知直接包含结果文件下载地址。
 * 接入方在收到通知之后，必须立即返回errorCode为0，否则通知会不断重试。接入方仍然可以使用3.8接口主动拉取作为兜底。
 
@@ -1644,25 +1168,23 @@ https://testing-vdi.<服务方域名>.com/vdi/vdi.html?sessionId=de1tuknz1500809
 
 * 取证终态失败的通知（必选）：**daFailed**，立即发出
 * 取证原文通知/授权完成通知（必选）：**daUserAuthorized**，用户取证成功点击同意提交按钮后，且用户协议上传成功，会发送带有**取证原文件**下载地址的文件通知。若为异步下载的数据类型（如N合一），需要等待下载完成，可能会于前端同意提交后时延30s左右发出；否则立即发出。
-<!-- * 存管证书通知（可选）：**daCertGenerated**，存管证书生成完成后，且用户协议和授权完成，会发送带有**存管证书**下载地址的文件通知，一般时延为发出daUserAuthorized之后5~10min -->
-* 解析文件通知（不再提供）：**daFileParsed**，如果不是本地化解析部署，且用户协议和授权完成，则**解析完成后**会发送**带有解析结果json文件**下载地址的通知，一般时延为发出daUserAuthorized之后5~10s。**自2024年开始，本通知仅对特定客户开放，新接入方需要使用本地部署解析代码对下载的原文进行解析。**
-<!-- * index页提交完成通知（index页提交时专用，一般情况下用不到）: **daSubmittedApp**在取数平台小程序页面点击"提交数据"时的通知 -->
+* 解析文件通知：**daFileParsed**，如果不是本地化解析部署，且用户协议和授权完成，则**解析完成后**会发送**带有解析结果json文件**下载地址的通知，一般时延为发出daUserAuthorized之后5~10s。
 
 ### 3.2 通知签名的生成与验证
 
 注：为了简便接入，**对我方发出的通知进行验签并非必须流程**，接入方仅在需要验签的场景中，如必须确定收到的通知信息的确是由清洁环境服务端发起等类似情况下，才需验证。
 
-#### 3.2.1 清洁环境运营方生成签名
-清洁环境运营方对所发出的通知使用RSA算法进行签名。清洁环境运营方的公钥会在接入方接入时，通过邮件发送给接入方。  
+#### 3.2.1 签名生成
+清洁环境服务提供方对所发出的通知使用RSA算法进行签名。清洁环境服务提供方的公钥会在接入方接入时，通过邮件发送给接入方。  
 清洁环境后台计算签名值后，会把数字签名值放入请求Header  
-* 接入方需要对清洁环境运营方的通知的签名进行验证，以保证数据的真实性和合法性  
+* 接入方需要对清洁环境服务提供方的通知的签名进行验证，以保证数据的真实性和合法性  
 
-#### 3.2.2 接入方验证通知签名的验证方法
+#### 3.2.2 签名验证
 
-* 先从header里的DECSHASH字段获取通知请求参数的哈希（或参考[2.2 哈希算法](/zh/access/main?id=_22-哈希算法)算出，计算时的appKey与分配给接入方的相同）  
+* 先从header里的DECSHASH字段获取通知请求参数的哈希（计算时的appKey与分配给接入方的相同）  
 * 从通知的Header里面取出DECSSIGN字段值，即为sign的值  
-* 清洁环境运营方会通过邮件发送通知用的公钥给接入方  
-* 使用[CryptoTool的verify接口](/zh/access/main?id=_331-如何生成跳转到vdi的-url)，传入DECSHASH, DECSSIGN来验证签名是否正确，返回结果为true即验证成功  
+* 清洁环境服务提供方会通过邮件发送通知用的公钥给接入方  
+* 使用[生成清洁环境的 URL](/zh/access/main?id=_235-生成清洁环境的-url)代码示例中的verify接口，传入DECSHASH, DECSSIGN来验证签名是否正确，返回结果为true即验证成功  
 
 ```java
 @Test
@@ -1690,43 +1212,47 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 * 请求URL：由接入方提供
 * 请求方法：POST
 * 请求头：Content-Type: application/json
-* 通知的参数：  
+
+#### 3.3.2 请求参数
 
 |参数|类型|说明|字段是否<br>必定存在|长度<br>限制|
 |:----|:----|:----|:----|:----|
-|func|String|通知类型。<br>取证终态失败的通知：daFailed<br>取证原文通知：daUserAuthorized<br>解析文件生成通知：daFileParsed<br>index页提交数据通知：daSubmittedApp|Y|    |
+|func|String|通知类型。<br>取证终态失败的通知：daFailed<br>取证原文通知：daUserAuthorized<br>解析文件生成通知：daFileParsed<br>|Y|    |
 |v|String|版本号，2.0.0|Y|    |
-|auth|对象|    |Y|    |
+|auth|Object|    |Y|    |
 |auth.nonce|String|随机数，32位随机串（字母+数字组成的随机数）|Y|32个字符|
-|data|对象|    |Y|    |
+|data|Object|    |Y|    |
 |data.bizAppId|String|接入方的appId|Y|    |
 |data.daId|String|取证ID|Y|    |
 |data.bizNo|String|接入方流水号（如果是从清洁环境直接进入的场景，这个字段为空字符串）|Y|128个字符|
 |data.site|String|用户访问的数据类型：[site的可能取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)|Y|32个字符|
-|**data.daStatus**|Int|用户取证状态值：[daStatus 可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|N |    |
-|**data**.**fileUrlList**|数组|下载的文件的url，是一个数组，表明可能有多个文件(pdf,csv或者xls等)。取证失败的话，该数组为空<br>取证原文通知：为取证原文<br>解析文件通知：为解析文件|N|    |
-|**data.jsonResult**|Int|文件解析完成 （10-解析成功, 12-无用户数据（公积金，任职信息，收入申报数据类型使用）， 13-公司名比对不匹配（企业版数据类型使用））|N |    |
+|data.daStatus|Int|用户取证状态值：[daStatus 可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|N |    |
+|data.fileUrlList|String[]|下载的文件的url，是一个数组，表明可能有多个文件(pdf,csv或者xls等)。取证失败的话，该数组为空<br>取证原文通知：为取证原文<br>解析文件通知：为解析文件|N|    |
+|data.jsonResult|Int|文件解析完成|N |    |
 |data.authorizedTs|Long|用户的完成授权的时间戳，单位是毫秒，值为 0 表示未授权。未授权的用户，接入方是无法拉取到用户的文件的。因此，可以判断authorizedTs > 0，确认状态无误即可下载。|N |    |
-|data.ext|对象|备用字段，ext是一个对象，用于扩展|Y|    |
+|data.ext|Object|备用字段，ext是一个对象，用于扩展|Y|    |
 |data.ext.userId|String|接入方的取证用户的第三方userId ，**暂不使用**|N|    |
 |data.ext.fileKey|String|下载文件的fileKey|N|    |
-|data.ext.pdfPassword|数组|下载的文件如果是pdf，且需要密码时会返回此字段。|N|    |
-|data.ext.daSubStatus|Integer|用户取证状态子码，提示一些失败详情，如用户取证无文件。可能取值：[daSubStatus可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|N|    |
-|data.ext.childDaList|数组|在N合1的数据类型会有此字段，如app-alipay-any,app-tax-any|N|    |
+|data.ext.pdfPassword|String[]|下载的文件如果是pdf，且需要密码时会返回此字段。|N|    |
+|data.ext.daSubStatus|Int|用户取证状态子码，提示一些失败详情，如用户取证无文件。可能取值：[daSubStatus可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|N|    |
+|data.ext.childDaList|Object[]|在N合1的数据类型会有此字段|N|    |
 |data.ext.[].childDaList.daId|String|N合1数据类型取证拆分出的子daId|N|    |
 |data.ext.[].childDaList.site|String|N合1数据类型取证拆分出的子site|N|    |
 |data.ext.[].childDaList.daStatus|String|N合1数据类型取证拆分出的子daStatus|N|    |
 |data.ext.[].childDaList.daSubStatus|String|N合1数据类型取证拆分出的子daSubStatus|N|    |
-<!-- |**data.certResult**|Int|存管证书生成完成（**仅存管证书通知会有这个字段**）|N (存管证书时)|    | -->
-**注意：**通知的返回字段是**不经过aesKey加密的**。aesKey的调用时机是由接入方决定的，清洁环境取数后台无法存储每一笔取数的旧aesKey。故，通知的字段均为非加密。  
-注意2：通知的返回字段里**没有unzipPassword**。
 
-* **接入方必须以此返回参数作为返回体**：  
+**注意：**通知的返回字段是**不经过aesKey加密的**。aesKey的调用时机是由接入方决定的，清洁环境取数后台无法存储每一笔取数的旧aesKey。故，通知的字段均为非加密。  
+
+#### 3.3.3 返回参数
+
+接入方必须以此返回参数回包 
 
 |参数|类型|说明|Required|
 |:----|:----|:----|:----|
 |errorCode|int|返回码：0成功，非0表示其他|Y|
 |errorMessage|String|返回结果描述|Y|
+
+#### 3.3.4 通知示例
 
 * 通知范例：原始取证文件  
 
@@ -1779,28 +1305,6 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 }
 ```  
 
-<!-- * 通知范例：存管证书（注意没有daStatus、jsonResult、authorizedTs，只有certResult）  
-
-```plain
-{
-	"func": "daCertGenerated",
-	"v": "2.0.0",
-	"auth": {
-		"nonce": "qfpG1ucU3HrkeL1swflBOoqDpm25ynNj"
-	},
-	"data": {
-		"bizAppId": "zd1zl4kd",
-		"daId": "zd1zl4kd1589532382325882880",
-		"bizNo": "we1386584661349863900",
-		"site": "chsi",
-		"certResult": 10,
-		"ext": {
-			"fileKey": "Nx1socBWUxPg8nceCqmANSzl6zJ0+IKwtgJPaMbv4CY="
-		},
-        "fileUrlList":["https://evidence-cert-bj-1308262583.cos.ap-beijing.myqcloud.com/cert_zd1uahd81590677482946936832_50bf4cc6bcad2fb13b3e1c5b384b28dd_chsi_xlzm.pdf?sign=q-sign-algorithm%3Dsha1%26q-ak%3DAKIDoRpxoOilX2GEuJRIsBDySfrnTszpOggP%26q-sign-time%3D1668084600%3B1668085200%26q-key-time%3D1668084600%3B1668085200%26q-header-list%3Dhost%26q-url-param-list%3D%26q-signature%3D0ff3ea33601610a1992231f4108022bebda972e0"]	}
-}
-```   -->
-
 * 通知范例：取证失败  
 
 ```plain
@@ -1822,29 +1326,26 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 }
 ```
 
-#### 3.3.2 注意事项
+#### 3.3.5 注意事项
 
 **注意：**
 
 1. 基于收到的通知，对文件拉取时机的判断条件设定：
-  * 到用户授权完成通知（func = daUserAuthorized, daStatus = 10）时，就可以从fileUrlList里获取原始取证文件的下载路径，或调用get-original-file接口获取
-  * 收到用户授权完成通知和解析完成通知（func = daFileParsed, jsonResult = 10）时，就可以从fileUrlList里获取解析结果json文件的下载路径，或调用get-parse-result接口获取
-  <!-- * 收到用户授权完成通知和存管证书生成通知（func = daCertGenerated, certResult = 10）时，就可以从fileUrlList里获取存管证书的下载路径，或调用get-cert-result接口获取 -->
-  * 收到取证失败通知（func = daFailed）时，则无需再调用任何拉取接口，该笔订单失败
+    * 到用户授权完成通知（func = daUserAuthorized, daStatus = 10）时，就可以从fileUrlList里获取原始取证文件的下载路径，或调用get-original-file接口获取
+    * 收到用户授权完成通知和解析完成通知（func = daFileParsed, jsonResult = 10）时，就可以从fileUrlList里获取解析结果json文件的下载路径，或调用get-parse-result接口获取
+    * 收到取数失败通知（func = daFailed）时，则无需再调用任何拉取接口，该笔订单失败
 
-<!-- 2. 解析文件通知和存管证书通知均为可选配置，如解析本地化部署，则可以选择不发送和接受此类型通知，如业务不需要存管证书，则可以选择不发送和接收此类通知 -->
 2. 解析文件通知可选配置，如解析本地化部署，则可以选择不发送和接受此类型通知
-3. 一笔取证，如果成功，可能会收到上面用户取证原文通知，解析文件通知，但是所有成功相关通知发出的前提条件为**用户已授权，且用户协议上传成功，**否则通知不会发出；如果失败，只会收到取证失败通知一种类型的通知。
-4. 清洁环境接入方在第一次通知失败时，会有按一定时间间隔的多次重试。**但通知不能保证必达，如因收发方服务器问题或网络问题等原因，导致通知不能到达，接入方需要针对此异常场景根据daId做兜底的超时拉取处理逻辑。详细可见下述：无法接收通知的兜底方案** [4.5 无法接收通知场景下的建议兜底方案](/zh/access/main?id=_45-无法接收通知场景下的建议兜底方案)
+3. 一笔取数，如果成功，可能会收到上面用户取数原文通知，解析文件通知，但是所有成功相关通知发出的前提条件为**用户已授权，且用户协议上传成功，**否则通知不会发出；如果失败，只会收到取数失败通知一种类型的通知。
+4. 清洁环境接入方在第一次通知失败时，会有按一定时间间隔的多次重试。**但通知不能保证必达，如因收发方服务器问题或网络问题等原因，导致通知不能到达，接入方需要针对此异常场景根据daId做兜底的超时拉取处理逻辑。详细可见下述：无法接收通知的兜底方案** [建议兜底方案](/zh/access/main?id=_35-建议兜底方案)
 5. **接入方需提供回调通知的URL，生产环境此接口的协议必须使用HTTPS，不能是HTTP**
 6. **通知的回包须严格遵守此json结构和key命名：**{"errorCode":0,"errorMessage":"OK"}，如果接收方收到此通知，则回包的errorCode必须返回0，否则发送方会视为失败继续重试。成功收到通知，建议直接回包，而对后续的针对通知数据的处理，请使用异步的方式处理，以避免此接口处理时间过长导致发送方超时重复发送。
 7. 通知的fileKey和fileUrl为明文，不做加密，可以直接使用下一节“返回值下载实例”所述的方式下载。
-8. 通知里文件url的有效期仅为5分钟，所以请收到后，立即异步处理文件下载以避免url过期导致下载失败。否则，接入方需要重新调用3.5（取证原始文件）、3.11（解析json）重新获取下载url和fileKey；而此时获取的下载url和fileKey是加密的，需要使用3.5.1的方式先解密再下载。
+8. 通知里文件url的有效期仅为5分钟，所以请收到后，立即异步处理文件下载以避免url过期导致下载失败。否则，接入方需要重新调用接口获取下载url和fileKey；而此时获取的下载url和fileKey是加密的，需要先解密再下载。
 
 ### 3.4 返回值下载实例
 
 本节为代码范例，介绍如何从通知接口的返回的加密fileKey和fileUrl完成下载。  
-注：**v2通知返回的fileKey和fileUrl一定是明文**，而主动拉取的返回结果为AES加密的。因此v2通知的fileKey和fileUrl可以不经过AES解密再使用（如3.5.2）；但主动拉取的返回结果需要先解密再下载（3.5.1+3.5.2）。  
 注：**为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。**
 
 清洁环境服务端云存储服务配置使用了文件存储服务端加密，则接口返回的fileKey字段不为空，需解密为一个base64的key，和解密后的fileUrl一起使用下面的代码下载文件，和普通文件下载的区别是header多设置了3个文件下载解密的参数。
@@ -1879,27 +1380,18 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |取数类型site|开始/完成时间|解析完成时间|最大超时时间|
 |:----|:----|:----|:----|
 |vdi模式取数|T0 / T|T+1s|T0 + 20min|
-<!-- |邮箱模式取数|    |    |    |T0 + 60min| -->
 
 **最佳实践：**
 
 * 接入方对每一笔取证，当您的前端收到结束信息时（h5/sdk webview返回），则：
-  * 调用3.5接口拉取原始文件的时机：收到前端结束信息后调用3次，每次间隔0s、10s、60s，成功即止
-  * 调用3.11接口拉取解析结果的时机：收到前端结束信息后调用3次，每次间隔5s、1min、10min，成功即止
-  <!-- * 调用3.6接口拉取存管证书的时机：收到前端结束信息后调用2次，每次间隔为10min、24hr，成功即止（您也可以使用定期任务统一拉取下载） -->
+  * 调用取数文件拉取接口的时机：收到前端结束信息后调用3次，每次间隔0s、10s、60s，成功即止
+  * 调用“取数解析文件”拉取接口的时机：收到前端结束信息后调用3次，每次间隔5s、1min、10min，成功即止
 * 如果您的前端无法稳定地收到结束信息，则：
-  * 调用3.5接口拉取原始文件的时机：该笔取证daId生成后调用1次，间隔20min（vdi模式）/ 60min（非vdi模式）
-  * 调用3.11接口拉取解析结果的时机：该笔取证daId生成后调用1次，间隔20min（vdi模式）/ 60min（非vdi模式）
-  <!-- * 调用3.6接口拉取存管证书的时机：该笔取证daId生成后调用1次，间隔25min（vdi模式）/ 65min（非vdi模式） -->
-* 您也可以在生成daId之后，每隔一段时间（建议60s）调用3.8接口，并在符合以下条件时：
-  * daStatus = 10 且 authorizedTs > 0 时，调用3.5接口拉取原始文件
-  * daStatus = 10 且 authorizedTs > 0 且 jsonResult = 10，调用3.11接口拉取解析结果
-  <!-- * certResult = 10且 authorizedTs > 0 ，调用3.6接口拉取存管证书 -->
+  * 调用取数文件拉取接口的时机：该笔取证daId生成后调用1次，间隔20min（vdi模式）/ 60min（非vdi模式）
+  * 调用“取数解析文件”拉取接口的时机：该笔取证daId生成后调用1次，间隔20min（vdi模式）/ 60min（非vdi模式）
+* 您也可以在生成daId之后，每隔一段时间（建议60s）调用取数状态拉取接口，并在符合以下条件时：
+  * daStatus = 10 且 authorizedTs > 0 时，调用取数文件拉取接口
+  * daStatus = 10 且 authorizedTs > 0 且 jsonResult = 10，调用“取数解析文件”拉取接口
   * daStatus < 10，视为取证中的中间态，需要继续调用
   * daStatus > 10，视为取证终态失败，无需调用
   * 对于vdi模式取数，最多调用20min
-  <!-- * 对于邮箱取数，最多调用60min； -->
-
-<!-- 注：对于fullminiapp方式的取证，无法直接使用daId进行兜底，必须在获取到返回的ext.userId字段值之后，根据此值建立其与daId的关系，再用daId去尝试兜底。或者，可以使用3.10的日终对账单接口进行兜底。 -->
-
-
