@@ -1,6 +1,6 @@
 ## 1. API Authentication Header
 
-When calling **all APIs** in Chapter 2, it is **REQUIRED** to generate the authentication header using the method described in this chapter.
+When calling **all APIs**, it is **REQUIRED** to generate the authentication header using the method described in this chapter.
 
 ### 1.1 Notes
 
