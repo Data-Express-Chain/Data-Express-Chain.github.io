@@ -40,7 +40,7 @@ Note: For asynchronous download data sources, a notification with daStatus = 10 
 | Front-end fallback general error                           | -60000                                  | Only received when front-end redirection URL is encountered, indicating that this attempt failed                                                                                                                                                                                                                          | Final State                                                                    |                                                                                      | N                |
 
 * **Notes:**
-  * daStatus = -4 represents the status value pulled when the user has not yet clicked "Agree" on the pre-page, which is an intermediate state.
+  * daStatus = -4 represents the status value pulled when the user has not yet clicked "Agree" on the pre-loading page, which is an intermediate state.
   * The range of daStatus values for final state failures: [13,100], that is, greater than or equal to 13 and less than or equal to 100.
   * The data format downloaded from the data type may be pdf/xls/csv/txt, etc.
   * **For the same user (idno) from the same integrator (appId), on the same** **calendar day** **(counted by the time the start-vdi** **request is initiated**), obtaining the same data type (site), only the first valid operation is charged. Other repeated data collection operations for the same site, whether valid or not, are not charged.

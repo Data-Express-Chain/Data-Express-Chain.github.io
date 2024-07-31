@@ -1,6 +1,6 @@
 ## Overview
 
-Nowadays, it is difficult for individual users to effectively ensure the authenticity and trustworthiness of their provided data. To address this issue, we have developed a SaaS service - Data Express Chain. It is focusing on the portability of personal data in Fintech area. Users proactively initiate personal data transmission by fetching the data by themselves. Afterwards, Data Express Chain incorporates blockchain technology to realize trustworthy data verification and further ensure the authenticity and reliability of data. This process allows users to become key participants in the process of data exchange - and it further grants the rights of personal data information to single individuals, aiming to build a basic infrastructure for cross-industry, cross-scenario, and distributed data transmission.
+Nowadays, it is difficult for individual users to effectively ensure the authenticity and trustworthiness of their provided data. To address this issue, we developed Data Express Chain, focusing on the portability of personal data in Fintech area. Users proactively and independently initiate personal data transfer process, including fetching and authorizing data to 3rd party all by themselves. Afterwards, Data Express Chain incorporates blockchain technology to realize trustworthy and tamper-proof data verification. This process ensures the authenticity and reliability of data transfer among multiple organizations, and it aims to build a basic infrastructure for secure and trusted personal data exchange.
 
 ## Data Source
 
