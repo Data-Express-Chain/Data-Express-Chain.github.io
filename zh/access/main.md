@@ -126,7 +126,7 @@ public class DecsHashTool {
     }
 
     public static void main(String[] args) throws Exception {
-        // 1. 请求清洁环境取证运营方可获取appKey
+        // 1. 请求清洁环境取数运营方可获取appKey
         String appKey = "FcuMaP8q39Q4IigraXdDKpvaOhF2PqNptq86ZHYRvtMjAdVZIOSEfW4t6IdxUJu9";
 
         // 2. 请求参数
@@ -156,7 +156,7 @@ public class DecsHashTool {
 
 ### 2.1 更新AES加密秘钥接口  
 #### 2.1.1 接口说明 
-接入方在调用清洁环境的相关接口时（或接收通知时），为了保护用户的敏感信息（用户协议、用户姓名、用户身份证号码、用户取证文件的URL）不泄露，需要对这些敏感信息用AES算法进行加密。为了保证加解密秘钥的安全，建议接入方定期和清洁环境服务提供方一起，定期调用此接口更新AES加密的秘钥（后面简称为aesKey）。  
+接入方在调用清洁环境的相关接口时（或接收通知时），为了保护用户的敏感信息（用户协议、用户姓名、用户身份证号码、用户取数文件的URL）不泄露，需要对这些敏感信息用AES算法进行加密。为了保证加解密秘钥的安全，建议接入方定期和清洁环境服务提供方一起，定期调用此接口更新AES加密的秘钥（后面简称为aesKey）。  
 
 **注意**：
 
@@ -284,7 +284,7 @@ AES加解密，需要使用aes-128-ecb，作为默认cipher
 #### 2.2.1 接口说明  
 
 接入方在进入清洁环境正式使用之前，需要提示用户与清洁环境服务提供方签署一份用户协议，完成后上传。  
-**此接口可以异步调用。如调用失败，不影响用户取证主流程。**  
+**此接口可以异步调用。如调用失败，不影响用户取数主流程。**  
 
 * 协议处理要求
 
@@ -417,7 +417,7 @@ FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 
 接入方在跳转清洁环境之前，需要先调用此接口开始取数。调用成功之后，后台会返回一个URL链接，供接入方前端页面跳转。
 
-* 注意：如果体验为用户点击某个按钮，就会触发接入方后台调用该接口，则一定要做好交互上的限制，防止用户快速重复点击（快速重复点击会导致用户取证被提前结束）。推荐体验是：  
+* 注意：如果体验为用户点击某个按钮，就会触发接入方后台调用该接口，则一定要做好交互上的限制，防止用户快速重复点击（快速重复点击会导致用户取数被提前结束）。推荐体验是：  
   1. 用户点击该按钮
   2. 按钮开始加载（按钮加载过程中，不允许用户再次点击）
   3. 触发接入方后台调用该接口 （start-vdi-x）
@@ -455,7 +455,7 @@ FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 |arg.accessWay|String|接入方式。您需要填入根据下列链接，填入相应值：<br>[支持的接入方式](/zh/access/appendix?id=_1-支持的接入方式)|Y|    |
 |arg.ext|Object|备用字段，ext是一个对象，用于扩展|N|    |
 |arg.ext.attach|String|附加数据，如果传值，则会在后端通知数据的ext里带上此字段|N|128个字符（byte），注意不是128个汉字字符|
-|arg.ext.urlattach|String|回跳URL附加字段。用于在返回接入方前端回跳页面时，附带额外参数。在接入方start-vdi传入，在h5取证完成后，从我方授权页面回跳到接入方h5页面时，url会携带此参数：key为attach_url，value为这里传入的值。|N|12个字符|
+|arg.ext.urlattach|String|回跳URL附加字段。用于在返回接入方前端回跳页面时，附带额外参数。在接入方start-vdi传入，在h5取数完成后，从我方授权页面回跳到接入方h5页面时，url会携带此参数：key为attach_url，value为这里传入的值。|N|12个字符|
 |arg.ext.childSites|String[]|当arg.site为N合一时，childSites数组需要填写|N|    |
 
 * 请求参数示例  
@@ -523,7 +523,7 @@ FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 
 注：生成的链接，有效期为8min（vcode过期时间），若超过此时间未点击进入，会提示过期。
 
-注：关于重入此链接：出于安全防重入的考虑，生成的链接只能用来生成一次登录态，也就是只要保证登录态不掉，可在webview里面刷新，也可以把页面挂起、切后台，都不影响当次取证。但如果接入方用户重新点击一次url进入，会导致登录态重建，此时会提示链接已过期，需要重新调用start-vdi。
+注：关于重入此链接：出于安全防重入的考虑，生成的链接只能用来生成一次登录态，也就是只要保证登录态不掉，可在webview里面刷新，也可以把页面挂起、切后台，都不影响当次取数。但如果接入方用户重新点击一次url进入，会导致登录态重建，此时会提示链接已过期，需要重新调用start-vdi。
 
 #### 2.3.5 生成清洁环境的 URL 
 
@@ -541,7 +541,7 @@ String sign = sign(redirectUrl, 接入方私钥)；
 https://testing-vdi.xxxx.xxx/vdi/vdi.html?daId=de1tuknz1500809629993668608&vcode=A86uXkYbIEwuFnr2y0ibZ9qjBGC3-X0D5HJKiylEMwA=&site=chsi&bizScenario=general&appId=de1tuknz&accessWay=sdk&fullUrl=true&sign=mGXan8cwSEpdoQaYU/wHD+Pos4Kxi+7NlLKvm3EcYaqUu8aJGqpgmmtfJqYSzhqhyPZw19iMGn16G9dd5ZzsYC3fNXYTRcn2jOmlFAPWGmi04WZGZUMt9d6uQy3Yfmlf7OLCFMFXDAFubv6QStuVegLYuBA2kdc4iMpqHcEOtT1YyL4fTepJRSiMQA21i+NE6Y8oxOaPj+qW7vl9RpK1dOxkio6eb6/c22IGVapwXHrKsOp1RoS+nO2ddk1MKFTYI9xsrPkry5LL2GCL80DEhinQ5uc90bgwd7Rh8tDm3qjxVdtVPZxAO2Bdic+4YGwJzoCyJ82NNf0dpmIzBbDgRw==
 ```
 
-3. 进入取证页面  
+3. 进入取数页面  
 
 * 通过第2步生成的URL，直接进入VDI  
 
@@ -630,7 +630,7 @@ public String encryptAES(String value, SecretKey key) throws Exception {
 
 #### 2.4.1 接口说明
 通过这个接口，从我方后台拉取本次取数用户在清洁环境下载的文件。  
-注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。
+注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取数原文、解析结果等），请及时拉取文件落库。
 
 * 下载地址失效时间为5分钟
 
@@ -652,19 +652,19 @@ public String encryptAES(String value, SecretKey key) throws Exception {
 |auth.appId|String|传入预先分配好的appId|Y|8|
 |auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
 |arg|Object|    |Y|    |
-|arg.daId|String|取证ID|Y|32|
+|arg.daId|String|取数ID|Y|32|
 |arg.ext|Object|备用字段，ext是一个对象，用于扩展|N|    |
 
 #### 2.4.4 返回参数  
 
 |参数|类型|说明|字段是否必定存在|    |
 |:----|:----|:----|:----|:----|
-|errorCode|Int|结果的返回码：0:成功，非0失败（0仅仅代表本次请求成功，没有后台服务错误，不代表取证成功; 特别地，**如果还没有收到接入方发送的用户签署的协议证书文件，会返回一个特定的错误码**|Y|    |
+|errorCode|Int|结果的返回码：0:成功，非0失败（0仅仅代表本次请求成功，没有后台服务错误，不代表取数成功; 特别地，**如果还没有收到接入方发送的用户签署的协议证书文件，会返回一个特定的错误码**|Y|    |
 |errorMessage|String|返回结果描述|Y|    |
 |data|Object|    |对象|    |
-|data.daId|String|取证ID|string|    |
+|data.daId|String|取数ID|string|    |
 |data.bizNo|String|业务层流水号|Y|    |
-|data.fileUrl|String[]|下载的源文件的url，是一个数组，表明可能有多个文件(pdf,csv或者xls等)。取证失败的话，该数组为空<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|Y|    |
+|data.fileUrl|String[]|下载的源文件的url，是一个数组，表明可能有多个文件(pdf,csv或者xls等)。取数失败的话，该数组为空<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|Y|    |
 |data.site|String|用户访问的数据类型：[site的可能取值](/zh/access/appendix?id=_2-支持的数据类型)|Y|    |
 |data.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
 |data.ext.fileKey|String|文件下载解密的key<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|N|    |
@@ -677,8 +677,8 @@ public String encryptAES(String value, SecretKey key) throws Exception {
 |0|    |成功|终态|
 |-44028|DA_NOT_AUTHORIZED_EXCEPTION|用户未授权|非终态，需要重试|
 |-44017|NOT_RECEIVED_USER_PROTOCOL_EXCEPTION|没有收到用户协议|非终态，需要重试|
-|-44062|DA_IN_PROGRESS_EXCEPTION|取证还在过程中|非终态，需要重试|
-|-44021|DA_FAILED_EXCEPTION|此笔取证为终态失败的取证|终态，无需重试|
+|-44062|DA_IN_PROGRESS_EXCEPTION|取数还在过程中|非终态，需要重试|
+|-44021|DA_FAILED_EXCEPTION|此笔取数为终态失败的取数|终态，无需重试|
 
 
 注意： 
@@ -737,7 +737,7 @@ public String decryptAes(String base64EncryptedValue, SecretKey key) throws Exce
 
 清洁环境后台云存储服务配置使用了文件存储服务端加密，则接口返回的fileKey字段不为空，需用上面方法解密为一个base64的key和解密后的fileUrl一起使用下面的代码下载文件。 同普通文件下载的区别是header多设置了3个文件下载解密的参数。
 
-注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。
+注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取数原文、解析结果等），请及时拉取文件落库。
 
 ```java
 @Test
@@ -880,8 +880,8 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |errorMessage|String|返回结果描述|Y|
 |data|Object|    |Y|
 |data.daStatus|Int|用户取数的状态值，详见：[daStatus的可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|Y|
-|data.browsingSite|String|用户取证访问站点|Y|
-|data.daId|String|取证ID|Y|
+|data.browsingSite|String|用户取数访问站点|Y|
+|data.daId|String|取数ID|Y|
 |data.bizNo|String|接入方流水号|Y|
 |data.jsonResult|Int|文件解析状态|Y|
 |data.appId|String|接入方的appId|Y|
@@ -1029,19 +1029,19 @@ void testDownloadUsingPresignedUrl() throws Exception{
 
 |字段名|说明|
 |:----|:----|
-|da_id|取证的ID，可以唯一标识一笔取证记录|
+|da_id|取数的ID，可以唯一标识一笔取数记录|
 |biz_no|第三方业务流水号|
 |app_id|接入数据快递链前预先分配好的appid|
-|site|实际取证的数据类型|
+|site|实际取数的数据类型|
 |access_way|接入方式|
-|da_status|取证状态码|
-|da_sub_status|取证子状态码|
+|da_status|取数状态码|
+|da_sub_status|取数子状态码|
 |json_result|文件解析的状态|
 |authorize_time|授权时间戳，>0L代表有值|
 |charge_flag|Y代表计费，N代表不计费|
 |charge_package|Y代表使用流量包内条数计费，N代表不使用流量包内条数计费|
 |user_protocol_upload_flag|Y代表已上传用户协议，N代表未上传|
-|create_time|取证订单创建时间|
+|create_time|取数订单创建时间|
 
 
 ### 2.8 “取数解析文件”拉取接口
@@ -1054,10 +1054,10 @@ void testDownloadUsingPresignedUrl() throws Exception{
 建议：我方可提供解析代码，由业务方部署在本地，收到取数原文后，在本地运行解析。建议技术能力充分的情况下本地部署。
 
 
-* 通过这个接口，从后台拉取本次取证的结果（成功或者失败），及文件的解析后的结构化数据下载地址（如有）  
+* 通过这个接口，从后台拉取本次取数的结果（成功或者失败），及文件的解析后的结构化数据下载地址（如有）  
 * 下载地址失效时间为5分钟  
 * **接入方需要使用对下载的解析结果进行解密**  
-注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。  
+注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取数原文、解析结果等），请及时拉取文件落库。  
 
 #### 2.8.2 接口路径  
 
@@ -1077,17 +1077,17 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |auth.appId|String|传入预先分配好的appId|Y|8|
 |auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
 |arg|Object|    |Y|    |
-|arg.daId|String|取证ID|Y|32|
+|arg.daId|String|取数ID|Y|32|
 |arg.ext|Object|备用字段，ext是一个对象，用于扩展|N|    |
 
 #### 2.8.4 返回参数  
 
 |参数|类型|说明|字段是否必定存在|
 |:----|:----|:----|:----|
-|errorCode|Int|结果的返回码：0:成功，非0失败（0仅仅代表本次请求成功，没有后台服务错误，不代表取证成功; 特别地，**如果还没有收到接入方发送的用户签署的协议证书文件，会返回一个特定的错误码**|Y|
+|errorCode|Int|结果的返回码：0:成功，非0失败（0仅仅代表本次请求成功，没有后台服务错误，不代表取数成功; 特别地，**如果还没有收到接入方发送的用户签署的协议证书文件，会返回一个特定的错误码**|Y|
 |errorMessage|String|返回结果描述|Y|
 |data|Object|    |对象|
-|data.daId|String|取证ID|string|
+|data.daId|String|取数ID|string|
 |data.bizNo|String|业务层流水号|Y|
 |data.jsonResult|Int|文件解析的状态（取值见下）|Y|
 |data.jsonFileUrl|String|PDF等文件对应的结构化数据，数组，每一个元素对应一个文件的结构化数据<br>*注意：接入方收到此字段后，需要先进行Base64的解码，然后使用aesKey解密。*|Y|
@@ -1103,11 +1103,11 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |:----|:----|:----|:----|
 |0|    |成功|终态|
 |-44009<br>-43024|NO_DB_RECORD_EXCEPTION|daId不存在|非终态，需要重试|
-|-44028|DA_NOT_AUTHORIZED_EXCEPTION|用户未授权，所以接入方不能拉取用户的取证文件等文件|非终态，需要重试|
+|-44028|DA_NOT_AUTHORIZED_EXCEPTION|用户未授权，所以接入方不能拉取用户的取数文件等文件|非终态，需要重试|
 |-44017|NOT_RECEIVED_USER_PROTOCOL_EXCEPTION|没有收到用户协议|非终态，需要重试|
 |-44001|FILE_PARSE_EXCEPTION|数据解析失败|非终态，需重试，重试时间范围7天内|
-|-44062|DA_IN_PROGRESS_EXCEPTION|取证还在过程中；若此时daStatus=10，则为解析尚未完成|非终态，需要重试|
-|-44021|DA_FAILED_EXCEPTION|此笔取证为终态失败的取证|终态，无需重试|
+|-44062|DA_IN_PROGRESS_EXCEPTION|取数还在过程中；若此时daStatus=10，则为解析尚未完成|非终态，需要重试|
+|-44021|DA_FAILED_EXCEPTION|此笔取数为终态失败的取数|终态，无需重试|
 
 * jsonResult的可能取值
 
@@ -1148,7 +1148,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 1. **接口调用成功返回的url有效期为5分钟，所以需要在5分钟内完成文件下载，如果过期可再次调用此接口返回新的url。**  
 2. **解析可能会因为原数据类型的用户文件格式改版或者出现新的未覆盖的格式用例导致解析失败，而暂时获取不到jsonFileUrl。我方会做解析的重新适配处理并在14天内发版解决，所以接入方需考虑此异常场景并支持在14天内的兜底重试拉取。**  
 
-注：为了确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等文件），请及时拉取文件并落库；超过10天的文件需要清洁环境后端服务方定期批量处理。  
+注：为了确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取数原文、解析结果等文件），请及时拉取文件并落库；超过10天的文件需要清洁环境后端服务方定期批量处理。  
 
 
 
@@ -1157,17 +1157,17 @@ void testDownloadUsingPresignedUrl() throws Exception{
 ## 3 通知接入方的相关接口说明
 
 
-用户取证是异步流程，由清洁环境后端服务进行处理之后使用通知方式，调用接入方预先配置给清洁环境后端的接口（单一接口），来异步通知接入方业务进度。
+用户取数是异步流程，由清洁环境后端服务进行处理之后使用通知方式，调用接入方预先配置给清洁环境后端的接口（单一接口），来异步通知接入方业务进度。
 
 
-* func含几个字段：取证失败、取证完成且授权成功、解析成功。
+* func含几个字段：取数失败、取数完成且授权成功、解析成功。
 * 通知直接包含结果文件下载地址。
 * 接入方在收到通知之后，必须立即返回errorCode为0，否则通知会不断重试。接入方仍然可以使用3.8接口主动拉取作为兜底。
 
-### 3.1 整个取证周期可能会有哪些通知
+### 3.1 整个取数周期可能会有哪些通知
 
-* 取证终态失败的通知（必选）：**daFailed**，立即发出
-* 取证原文通知/授权完成通知（必选）：**daUserAuthorized**，用户取证成功点击同意提交按钮后，且用户协议上传成功，会发送带有**取证原文件**下载地址的文件通知。若为异步下载的数据类型（如N合一），需要等待下载完成，可能会于前端同意提交后时延30s左右发出；否则立即发出。
+* 取数终态失败的通知（必选）：**daFailed**，立即发出
+* 取数原文通知/授权完成通知（必选）：**daUserAuthorized**，用户取数成功点击同意提交按钮后，且用户协议上传成功，会发送带有**取数原文件**下载地址的文件通知。若为异步下载的数据类型（如N合一），需要等待下载完成，可能会于前端同意提交后时延30s左右发出；否则立即发出。
 * 解析文件通知：**daFileParsed**，如果不是本地化解析部署，且用户协议和授权完成，则**解析完成后**会发送**带有解析结果json文件**下载地址的通知，一般时延为发出daUserAuthorized之后5~10s。
 
 ### 3.2 通知签名的生成与验证
@@ -1208,7 +1208,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 
 #### 3.3.1 接口说明
 
-* 说明：每当取证状态变化的时候，会通知接入方取证状态的变化。
+* 说明：每当取数状态变化的时候，会通知接入方取数状态的变化。
 * 请求URL：由接入方提供
 * 请求方法：POST
 * 请求头：Content-Type: application/json
@@ -1217,29 +1217,29 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 
 |参数|类型|说明|字段是否<br>必定存在|长度<br>限制|
 |:----|:----|:----|:----|:----|
-|func|String|通知类型。<br>取证终态失败的通知：daFailed<br>取证原文通知：daUserAuthorized<br>解析文件生成通知：daFileParsed<br>|Y|    |
+|func|String|通知类型。<br>取数终态失败的通知：daFailed<br>取数原文通知：daUserAuthorized<br>解析文件生成通知：daFileParsed<br>|Y|    |
 |v|String|版本号，2.0.0|Y|    |
 |auth|Object|    |Y|    |
 |auth.nonce|String|随机数，32位随机串（字母+数字组成的随机数）|Y|32个字符|
 |data|Object|    |Y|    |
 |data.bizAppId|String|接入方的appId|Y|    |
-|data.daId|String|取证ID|Y|    |
+|data.daId|String|取数ID|Y|    |
 |data.bizNo|String|接入方流水号（如果是从清洁环境直接进入的场景，这个字段为空字符串）|Y|128个字符|
 |data.site|String|用户访问的数据类型：[site的可能取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)|Y|32个字符|
-|data.daStatus|Int|用户取证状态值：[daStatus 可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|N |    |
-|data.fileUrlList|String[]|下载的文件的url，是一个数组，表明可能有多个文件(pdf,csv或者xls等)。取证失败的话，该数组为空<br>取证原文通知：为取证原文<br>解析文件通知：为解析文件|N|    |
+|data.daStatus|Int|用户取数状态值：[daStatus 可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|N |    |
+|data.fileUrlList|String[]|下载的文件的url，是一个数组，表明可能有多个文件(pdf,csv或者xls等)。取数失败的话，该数组为空<br>取数原文通知：为取数原文<br>解析文件通知：为解析文件|N|    |
 |data.jsonResult|Int|文件解析完成|N |    |
 |data.authorizedTs|Long|用户的完成授权的时间戳，单位是毫秒，值为 0 表示未授权。未授权的用户，接入方是无法拉取到用户的文件的。因此，可以判断authorizedTs > 0，确认状态无误即可下载。|N |    |
 |data.ext|Object|备用字段，ext是一个对象，用于扩展|Y|    |
-|data.ext.userId|String|接入方的取证用户的第三方userId ，**暂不使用**|N|    |
+|data.ext.userId|String|接入方的取数用户的第三方userId ，**暂不使用**|N|    |
 |data.ext.fileKey|String|下载文件的fileKey|N|    |
 |data.ext.pdfPassword|String[]|下载的文件如果是pdf，且需要密码时会返回此字段。|N|    |
-|data.ext.daSubStatus|Int|用户取证状态子码，提示一些失败详情，如用户取证无文件。可能取值：[daSubStatus可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|N|    |
+|data.ext.daSubStatus|Int|用户取数状态子码，提示一些失败详情，如用户取数无文件。可能取值：[daSubStatus可能取值](/zh/access/appendix?id=_3-dastatus的可能取值)|N|    |
 |data.ext.childDaList|Object[]|在N合1的数据类型会有此字段|N|    |
-|data.ext.[].childDaList.daId|String|N合1数据类型取证拆分出的子daId|N|    |
-|data.ext.[].childDaList.site|String|N合1数据类型取证拆分出的子site|N|    |
-|data.ext.[].childDaList.daStatus|String|N合1数据类型取证拆分出的子daStatus|N|    |
-|data.ext.[].childDaList.daSubStatus|String|N合1数据类型取证拆分出的子daSubStatus|N|    |
+|data.ext.[].childDaList.daId|String|N合1数据类型取数拆分出的子daId|N|    |
+|data.ext.[].childDaList.site|String|N合1数据类型取数拆分出的子site|N|    |
+|data.ext.[].childDaList.daStatus|String|N合1数据类型取数拆分出的子daStatus|N|    |
+|data.ext.[].childDaList.daSubStatus|String|N合1数据类型取数拆分出的子daSubStatus|N|    |
 
 **注意：**通知的返回字段是**不经过aesKey加密的**。aesKey的调用时机是由接入方决定的，清洁环境取数后台无法存储每一笔取数的旧aesKey。故，通知的字段均为非加密。  
 
@@ -1254,7 +1254,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 
 #### 3.3.4 通知示例
 
-* 通知范例：原始取证文件  
+* 通知范例：原始取数文件  
 
 ```plain
 {
@@ -1305,7 +1305,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 }
 ```  
 
-* 通知范例：取证失败  
+* 通知范例：取数失败  
 
 ```plain
 {
@@ -1331,7 +1331,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 **注意：**
 
 1. 基于收到的通知，对文件拉取时机的判断条件设定：
-    * 到用户授权完成通知（func = daUserAuthorized, daStatus = 10）时，就可以从fileUrlList里获取原始取证文件的下载路径，或调用get-original-file接口获取
+    * 到用户授权完成通知（func = daUserAuthorized, daStatus = 10）时，就可以从fileUrlList里获取原始取数文件的下载路径，或调用get-original-file接口获取
     * 收到用户授权完成通知和解析完成通知（func = daFileParsed, jsonResult = 10）时，就可以从fileUrlList里获取解析结果json文件的下载路径，或调用get-parse-result接口获取
     * 收到取数失败通知（func = daFailed）时，则无需再调用任何拉取接口，该笔订单失败
 
@@ -1346,7 +1346,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 ### 3.4 返回值下载实例
 
 本节为代码范例，介绍如何从通知接口的返回的加密fileKey和fileUrl完成下载。  
-注：**为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。**
+注：**为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取数原文、解析结果等），请及时拉取文件落库。**
 
 清洁环境服务端云存储服务配置使用了文件存储服务端加密，则接口返回的fileKey字段不为空，需解密为一个base64的key，和解密后的fileUrl一起使用下面的代码下载文件，和普通文件下载的区别是header多设置了3个文件下载解密的参数。
 
@@ -1373,7 +1373,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 
 ### 3.5 建议兜底方案
 
-通知不能保证必达，如因双方服务器问题或网络问题等原因，导致通知不能到达，接入方需要针对此异常场景根据daId做兜底的超时拉取处理逻辑。一般地，将单次取证链接的生成时间记为T0，成功完成（daStatus=0 且 authorizedTs>0）记为T，则平均解析完成时间、最大超时时间为：
+通知不能保证必达，如因双方服务器问题或网络问题等原因，导致通知不能到达，接入方需要针对此异常场景根据daId做兜底的超时拉取处理逻辑。一般地，将单次取数链接的生成时间记为T0，成功完成（daStatus=0 且 authorizedTs>0）记为T，则平均解析完成时间、最大超时时间为：
 
 <!-- （注：邮箱模式包括所有beehive-和qqmail-开头） -->
 
@@ -1383,15 +1383,15 @@ void testDownloadUsingPresignedUrl() throws Exception{
 
 **最佳实践：**
 
-* 接入方对每一笔取证，当您的前端收到结束信息时（h5/sdk webview返回），则：
+* 接入方对每一笔取数，当您的前端收到结束信息时（h5/sdk webview返回），则：
   * 调用取数文件拉取接口的时机：收到前端结束信息后调用3次，每次间隔0s、10s、60s，成功即止
   * 调用“取数解析文件”拉取接口的时机：收到前端结束信息后调用3次，每次间隔5s、1min、10min，成功即止
 * 如果您的前端无法稳定地收到结束信息，则：
-  * 调用取数文件拉取接口的时机：该笔取证daId生成后调用1次，间隔20min（vdi模式）/ 60min（非vdi模式）
-  * 调用“取数解析文件”拉取接口的时机：该笔取证daId生成后调用1次，间隔20min（vdi模式）/ 60min（非vdi模式）
+  * 调用取数文件拉取接口的时机：该笔取数daId生成后调用1次，间隔20min（vdi模式）/ 60min（非vdi模式）
+  * 调用“取数解析文件”拉取接口的时机：该笔取数daId生成后调用1次，间隔20min（vdi模式）/ 60min（非vdi模式）
 * 您也可以在生成daId之后，每隔一段时间（建议60s）调用取数状态拉取接口，并在符合以下条件时：
   * daStatus = 10 且 authorizedTs > 0 时，调用取数文件拉取接口
   * daStatus = 10 且 authorizedTs > 0 且 jsonResult = 10，调用“取数解析文件”拉取接口
-  * daStatus < 10，视为取证中的中间态，需要继续调用
-  * daStatus > 10，视为取证终态失败，无需调用
+  * daStatus < 10，视为取数中的中间态，需要继续调用
+  * daStatus > 10，视为取数终态失败，无需调用
   * 对于vdi模式取数，最多调用20min

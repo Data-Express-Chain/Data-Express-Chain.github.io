@@ -22,4 +22,3 @@ Nowadays, it is difficult for individual users to effectively ensure the authent
 | Failure Page          | The page after a failed data fetching, provided by System Integrator                                                                       |
 | Original-File         | The original data file acquired directly from data source                                                                                   |
 | Original-File-Parsing | Parsing the Original-File into readable json format (Parsed-File)                                                                          |
-| Admin Console         | The administration web console to manage DECS configurations, used by System Provider                                                       |
