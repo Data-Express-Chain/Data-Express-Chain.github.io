@@ -4,8 +4,8 @@ Nowadays, it is difficult for individual users to effectively ensure the authent
 
 ## Data Source
 
-* Chiyu Banking
-* Tax Payment e-Receipt
+* Chiyu banking transaction records
+* Tax payment e-receipt
 
 ## Terminology
 
@@ -17,9 +17,9 @@ Nowadays, it is difficult for individual users to effectively ensure the authent
 | System Integrator     | Organization seeking to access to DECS deployed by System Provider                            |
 | System End-User       | End-User of DECS to do actual data acquisition                                                |
 | Clean Environment     | Remote software environment where End-User doing data acquisition                             |
-| VDI                   | The specific Virtual Machine where End-User do data acquisition                               |
 | Success Page          | The url page redirected to after a successful data acquisition, provided by System Integrator |
 | Failure Page          | The url page redirected to after a failed data acquisition, provided by System Integrator     |
 | Original-File         | The original data file acquired directly from data source                                     |
 | Original-File-Parse   | Parsing the Original-File from data source into readable json format                          |
 | Admin Console         | The administration web console to manage DECS settings, used by System Provider               |
+| VDI                   | The specific Virtual Machine where End-User do data acquisition                               |

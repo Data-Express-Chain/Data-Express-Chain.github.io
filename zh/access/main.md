@@ -1,15 +1,15 @@
-## 1 接入方需要提供的信息，请参考对应的集成文档
+<!-- ## 1 接入方需要提供的信息，请参考对应的集成文档 -->
 
-## 2 安全登录鉴权
-在调用第三章**所有接口**时，**都需要**对请求使用本章的方式生成鉴权header  
+## 1 接口鉴权
+在调用本章**所有接口**时，**都需要**对请求使用本章的方式生成鉴权header  
 
-### 2.1 注意事项
+### 1.1 注意事项
 * openapi请求均为POST请求，content-type均为application/json  
 
-### 2.2 哈希算法  
+### 1.2 哈希算法  
 
-#### 2.2.1 根据接口请求所需参数生成 JSON  
-举例：接口请求参数如下： 
+#### 1.2.1 参数准备  
+根据接口请求所需参数生成 JSON ，举例：接口请求参数如下： 
 ```json
 {
     "v": "1.0.0",
@@ -24,8 +24,8 @@
 }
 ```
 
-#### 2.2.2 对请求参数 JSON 字符串按照ASCII字典序，对key值排序  
-
+#### 1.2.2 参数排序  
+对请求参数 JSON 字符串按照ASCII字典序，对key值排序
 * 注意，请求参数的 JSON 一般是多级结构，**对每一级都需要按照ASCII字典序，对key值排序**  
 举例，排序后的请求参数 JSON 如下：
 
@@ -43,15 +43,15 @@
 }
 ```
 
-#### 2.2.3 序列化请求参数的 JSON 为字符串  
-
+#### 1.2.3 参数序列化
+序列化请求参数的 JSON 为字符串 
 * 注意：需要删除JSON字符串里面的所有空白字符。  
 
 ```java
 {"arg":{"a":"xxx","b":"xxx"},"auth":{"appId":"IDAkEBvb","nonce":"20rr7wbca98e8325f0fjd77yl130j6hi"},"v":"1.0.0"}"
 ```
 
-#### 2.2.4 计算哈希  
+#### 1.2.4 计算哈希  
 
 在 sortedJson 最后拼接上 appKey 得到 sortedJsonWithKey 字符串，并对 sortedJsonWithKey 进行 HMAC-SHA256 运算（运算过程中，如需，需要将appKey作为运算用密钥），再将得到的字符串所有字符转换为大写，得到 unsignedData。 注意：appKey的长度为 64 个字节。
 
@@ -63,7 +63,7 @@ sortedJsonWithKey = sortedJson + "FcuMaP8q39Q4IigraXdDKpvaOhF2PqNptq86ZHYRvtMjAd
 decsHash = HMAC-SHA256("HmacSHA256", sortedJsonWithKey).toUpperCase() = "C3AF574420D41A7CEE9C44FCFC84FE15D36D5C97A80111278B82CCEAFCDC7C96";
 ```  
 
-#### 2.2.5 把哈希放入请求Header
+#### 1.2.5 把哈希放入请求Header
 
 在HTTP Header里面加上字段 DECSHASH，值为上一步算出来的哈希  
 
@@ -72,7 +72,7 @@ Map<String, String> header = new HashMap<>();
 header.put("DECSHASH", decsHash);
 ```
 
-#### 2.2.6 代码示例
+#### 1.2.6 代码示例
 
 ```java
 import com.fasterxml.jackson.databind.JsonNode;
@@ -143,7 +143,7 @@ public class DecsHashTool {
 }
 ```  
 
-### 2.3 通用接口报错
+### 1.3 鉴权相关的错误
 
 在调用任意一个接口时，有小概率可能会产生一些通用的接口报错，如下：
 
@@ -152,9 +152,9 @@ public class DecsHashTool {
 |-48007|ExternalLBError|外部网络跳转错误（临时），请稍后再试|
 |-50005|SignInvalid|DECSHASH计算错误|
 
-## 3 接口列表  
+## 2 接口列表  
 
-### 3.1 更新AES加密秘钥接口  
+### 2.1 更新AES加密秘钥接口  
 
 接入方在调用清洁环境的相关接口时（或接收通知时），为了保护用户的敏感信息（用户协议、用户姓名、用户身份证号码、用户取证文件的URL）不泄露，需要对这些敏感信息用AES算法进行加密。为了保证加解密秘钥的安全，建议接入方定期和清洁环境服务提供方一起，定期调用此接口更新AES加密的秘钥（后面简称为aesKey）。  
 
@@ -217,7 +217,8 @@ public class DecsHashTool {
 }
 ```  
 
-#### 3.1.1对请求返回的aesKey进行解密代码示例  
+#### 2.1.1 代码示例  
+对请求返回的aesKey进行解密代码示例  
 
 Java:  
 
@@ -278,7 +279,141 @@ NodeJs:
 
 AES加解密，需要使用aes-128-ecb，作为默认cipher
 
-### 3.3 start-vdi-x 接口 （h5接入模式使用该接口）  
+
+### 3.2 用户协议签署接口
+
+* 接口说明：
+
+接入方在进入清洁环境正式使用之前，需要提示用户与清洁环境服务提供方签署一份用户协议，完成后上传。  
+<!-- **本接口，对于使用miniappwithca、fullminiapp方式接入的场景不需要调用。**   -->
+**此接口可以异步调用。如调用失败，不影响用户取证主流程。**  
+
+* 协议处理要求
+
+1）用户选择提交对应的数据类型（接口中的site）时，要使用对应的协议模板签署（我们提供模版，仅**数据类型中文名称**根据**site**变化，其他一致），且为pdf格式，需要替换的内容为绿色部分（全文替换2处）。数据类型中文名称和site对应关系见附录第二章，site英文值对应的最后一列：[2.1 VDI类型数据](/zh/access/appendix?id=_21-vdi类型数据)  
+2）在文初姓名、身份证的地方对应动态写入当前用户的姓名、身份证号码（明文）  
+3）文末用CA签名（调用接入方给C端用户的的电子签），并且加上日期  
+4）签署好之后，每次调用把签署好的PDF文件通过3.4接口上传。  
+备注：协议可复用，维度是用户身份证号（接口中的idNo） + 数据类型（接口中的site）。举例：张三取了A数据类型，协议可以签署一份，但是张三每次提交A的时候，这一份协议都要调用接口传送。  
+5）协议需要在用户操作完成之前传过来，这样确保可以及时收到通知和及时拉取取数文件  
+注意：**应业务要求，各接入方请务必确保每个用户、及该用户每个请求到的数据类型都上传用户协议，否则我方有权停止服务**。
+
+* 接口调用方式：  
+
+|接口名|Method|Content-Type|
+|:----|:----|:----|
+|(测试环境)<br>https://testing-vdi.<服务方域名>/api/das/upload-user-protocol-x|POST|application/json|
+|(生产环境)<br>https://vdi.<服务方域名>/api/das/upload-user-protocol-x|POST|application/json|
+
+注：具体的服务方域名，请联系您的对接同学获取
+
+* 请求：  
+
+|参数名|类型|说明|Required|长度|
+|:----|:----|:----|:----|:----|
+|v|String|版本号，默认填1.0.0|Y|8|
+|auth|对象|    |Y|    |
+|auth.appId|String|传入预先分配好的appId|Y|8|
+|auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
+|arg|对象|    |Y|    |
+|arg.idNo|String|使用VDI的用户的身份证号。**接入方需要首先对身份证号进行合法性验证，对不符合身份证号码格式和位数的请求予以拒绝。**<br><br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
+|arg.site|String|用户访问的数据类型：[site的可能取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)|Y|    |
+|arg.files[]|对象数组|协议文件数组|Y|    |
+|arg.files[].name|String|文件名|Y|    |
+|arg.files[].content|String|文件内容<br>*说明：使用aesKey对文件流进行加密，然后Base64编码加密后的文件流。*|Y|    |
+|arg.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
+
+* 请求参数示例  
+
+```json
+{
+    "v": "1.0.0",
+    "auth": {
+        "appId": "appid1",
+        "nonce": "RandomCode.getRandomString(32)"
+    },
+    "arg": {
+        "idNo": "UETETEooFDFEEFUFEFEFEFE",
+        "site": "xlcx",
+        "files": [
+            {
+                "name": "aaa.pdf",
+                "content": "MTIzNDU2Nzg5"
+            }
+        ]
+    }
+}
+```
+
+* 返回参数  
+
+|参数|类型|说明|Required|
+|:----|:----|:----|:----|
+|errorCode|int|结果的返回码：0:成功，非0失败|Y|
+|errorMessage|String|返回结果描述|Y|
+|data|对象|返回结果(如果调用失败返回null)|Y|
+|data.result|boolean|文件上传结果|Y|
+
+* 特殊错误码  
+
+|错误码|错误信息|描述|
+|:----|:----|:----|
+|-43037 或 -44050|AES_DECRYPT_EXCEPTION|AES解密失败，请使用最新的AES密钥|
+
+* 返回参数示例  
+
+```json
+{
+    "errorCode": 0,
+    "errorMessage": "success",
+    "data": {
+        "result": true
+    }
+}
+```
+ 
+#### 2.2.1 代码示例
+对请求的file content字段文件内容进行加密代码示例
+
+```java
+@Test
+void testEncyptFileContent() throws Exception{
+    File file = new File("D:\\user_proto.pdf");
+    String base64AesKey = "Ht6SPOmfGv6VjSo0Z5F3ng==";
+    byte[] fileBytes = FileUtils.readFileToByteArray(file);
+    SecretKey aesKey = loadAesKey(base64AesKey);
+    byte[] encryptedFileBytes = encryptAES(fileBytes, aesKey);
+    String base64encryptedFileStr = Base64.getEncoder().encodeToString(encryptedFileBytes);
+    log.info(base64encryptedFileStr);
+}
+
+public byte[] encryptAES(byte[] bytes, SecretKey key) throws Exception {
+    Cipher cipher = Cipher.getInstance("AES");
+    cipher.init(Cipher.ENCRYPT_MODE, key);
+    byte[] encryptedBytes = cipher.doFinal(bytes);
+    return encryptedBytes;
+}
+
+public SecretKey loadAesKey(String base64Aeskey) {
+    byte[] bytes = Base64.getDecoder().decode(base64Aeskey);
+    SecretKey key = new SecretKeySpec(bytes, "AES");
+    return key;
+}
+```
+
+如果出现空白文件等问题，您可以使用下述代码先尝试本地处理，观察能否将base64encryptedFileStr 在本地还原成原始文件pdf。
+
+```java
+byte[] encyptedBytes = Base64.getDecoder().decode(base64encryptedFileStr);
+Cipher cipher = Cipher.getInstance("AES");
+cipher.init(Cipher.DECRYPT_MODE, aesKey);
+byte[] decodedBytes = cipher.doFinal(encyptedBytes);
+String downloadFileSavePath = "D:\\save.pdf";
+FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
+```
+
+
+### 2.3 start-vdi-x 接口
 
 * 接口说明： 
 
@@ -405,7 +540,7 @@ AES加解密，需要使用aes-128-ecb，作为默认cipher
 * 您的APP需要已经申请摄像头权限；
 * 如果您的APP是安卓版本，则需要能够响应webview的调起相机请求。如果您的APP尚未实现此功能，我们可以提供样例参考代码。 -->
 
-#### 3.3.1 如何生成跳转到VDI的 URL  
+#### 2.3.1 生成清洁环境的 URL 
 
 1. 使用接入方自行生成的 RSA 公私钥对中的私钥（公钥需要提前给到我方），对返回参数中的`redirectUrl`进行签名，得到`sign`字段。  
 
@@ -465,7 +600,7 @@ public class CryptoTool {
 }
 ```  
 
-#### 3.3.2 取证结束返回值的处理  
+#### 2.3.2 取数结束返回值的处理  
 
 * 当用户操作完成后，VDI 页面会打开接入方的结果页面，并带上bizNo、daId、daStatus、site，可能有attach_url及status
 * 结果 URL 示例如下：  
@@ -477,7 +612,7 @@ https://www.yyy.com/jumpChannel.html?attach_url=channel_a&bizNo=acf1700443444e7b
 * site具体取值，见后文：[site取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)
 * daStatus 具体取值，见后文：[daStatus取值](/zh/access/appendix?id=_3-dastatus的可能取值)
 
-#### 3.3.3 调用前对参数字段加密代码示例
+#### 2.3.3 调用参数字段加密代码示例
 
 ```
 @Test
@@ -504,138 +639,7 @@ public String encryptAES(String value, SecretKey key) throws Exception {
 }
 ```
 
-### 3.4 用户协议签署接口
-
-* 接口说明：
-
-接入方在进入清洁环境正式使用之前，需要提示用户与清洁环境服务提供方签署一份用户协议，完成后上传。  
-<!-- **本接口，对于使用miniappwithca、fullminiapp方式接入的场景不需要调用。**   -->
-**此接口可以异步调用。如调用失败，不影响用户取证主流程。**  
-
-* 协议处理要求
-
-1）用户选择提交对应的数据类型（接口中的site）时，要使用对应的协议模板签署（我们提供模版，仅**数据类型中文名称**根据**site**变化，其他一致），且为pdf格式，需要替换的内容为绿色部分（全文替换2处）。数据类型中文名称和site对应关系见附录第二章，site英文值对应的最后一列：[2.1 VDI类型数据](/zh/access/appendix?id=_21-vdi类型数据)  
-2）在文初姓名、身份证的地方对应动态写入当前用户的姓名、身份证号码（明文）  
-3）文末用CA签名（调用接入方给C端用户的的电子签），并且加上日期  
-4）签署好之后，每次调用把签署好的PDF文件通过3.4接口上传。  
-备注：协议可复用，维度是用户身份证号（接口中的idNo） + 数据类型（接口中的site）。举例：张三取了A数据类型，协议可以签署一份，但是张三每次提交A的时候，这一份协议都要调用接口传送。  
-5）协议需要在用户操作完成之前传过来，这样确保可以及时收到通知和及时拉取取数文件  
-注意：**应业务要求，各接入方请务必确保每个用户、及该用户每个请求到的数据类型都上传用户协议，否则我方有权停止服务**。
-
-* 接口调用方式：  
-
-|接口名|Method|Content-Type|
-|:----|:----|:----|
-|(测试环境)<br>https://testing-vdi.<服务方域名>/api/das/upload-user-protocol-x|POST|application/json|
-|(生产环境)<br>https://vdi.<服务方域名>/api/das/upload-user-protocol-x|POST|application/json|
-
-注：具体的服务方域名，请联系您的对接同学获取
-
-* 请求：  
-
-|参数名|类型|说明|Required|长度|
-|:----|:----|:----|:----|:----|
-|v|String|版本号，默认填1.0.0|Y|8|
-|auth|对象|    |Y|    |
-|auth.appId|String|传入预先分配好的appId|Y|8|
-|auth.nonce|String|32位随机串（字母+数字组成的随机数），每次调用需传不同值|Y|32|
-|arg|对象|    |Y|    |
-|arg.idNo|String|使用VDI的用户的身份证号。**接入方需要首先对身份证号进行合法性验证，对不符合身份证号码格式和位数的请求予以拒绝。**<br><br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
-|arg.site|String|用户访问的数据类型：[site的可能取值](/zh/access/appendix?id=_2-目前支持的数据类型-site)|Y|    |
-|arg.files[]|对象数组|协议文件数组|Y|    |
-|arg.files[].name|String|文件名|Y|    |
-|arg.files[].content|String|文件内容<br>*说明：使用aesKey对文件流进行加密，然后Base64编码加密后的文件流。*|Y|    |
-|arg.ext|对象|备用字段，ext是一个对象，用于扩展|N|    |
-
-* 请求参数示例  
-
-```json
-{
-    "v": "1.0.0",
-    "auth": {
-        "appId": "appid1",
-        "nonce": "RandomCode.getRandomString(32)"
-    },
-    "arg": {
-        "idNo": "UETETEooFDFEEFUFEFEFEFE",
-        "site": "xlcx",
-        "files": [
-            {
-                "name": "aaa.pdf",
-                "content": "MTIzNDU2Nzg5"
-            }
-        ]
-    }
-}
-```
-
-* 返回参数  
-
-|参数|类型|说明|Required|
-|:----|:----|:----|:----|
-|errorCode|int|结果的返回码：0:成功，非0失败|Y|
-|errorMessage|String|返回结果描述|Y|
-|data|对象|返回结果(如果调用失败返回null)|Y|
-|data.result|boolean|文件上传结果|Y|
-
-* 特殊错误码  
-
-|错误码|错误信息|描述|
-|:----|:----|:----|
-|-43037 或 -44050|AES_DECRYPT_EXCEPTION|AES解密失败，请使用最新的AES密钥|
-
-* 返回参数示例  
-
-```json
-{
-    "errorCode": 0,
-    "errorMessage": "success",
-    "data": {
-        "result": true
-    }
-}
-```
- 
-#### 3.4.1对请求的file content字段文件内容进行加密代码示例
-
-```java
-@Test
-void testEncyptFileContent() throws Exception{
-    File file = new File("D:\\user_proto.pdf");
-    String base64AesKey = "Ht6SPOmfGv6VjSo0Z5F3ng==";
-    byte[] fileBytes = FileUtils.readFileToByteArray(file);
-    SecretKey aesKey = loadAesKey(base64AesKey);
-    byte[] encryptedFileBytes = encryptAES(fileBytes, aesKey);
-    String base64encryptedFileStr = Base64.getEncoder().encodeToString(encryptedFileBytes);
-    log.info(base64encryptedFileStr);
-}
-
-public byte[] encryptAES(byte[] bytes, SecretKey key) throws Exception {
-    Cipher cipher = Cipher.getInstance("AES");
-    cipher.init(Cipher.ENCRYPT_MODE, key);
-    byte[] encryptedBytes = cipher.doFinal(bytes);
-    return encryptedBytes;
-}
-
-public SecretKey loadAesKey(String base64Aeskey) {
-    byte[] bytes = Base64.getDecoder().decode(base64Aeskey);
-    SecretKey key = new SecretKeySpec(bytes, "AES");
-    return key;
-}
-```
-
-如果出现空白文件等问题，您可以使用下述代码先尝试本地处理，观察能否将base64encryptedFileStr 在本地还原成原始文件pdf。
-
-```java
-byte[] encyptedBytes = Base64.getDecoder().decode(base64encryptedFileStr);
-Cipher cipher = Cipher.getInstance("AES");
-cipher.init(Cipher.DECRYPT_MODE, aesKey);
-byte[] decodedBytes = cipher.doFinal(encyptedBytes);
-String downloadFileSavePath = "D:\\save.pdf";
-FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
-```
-
-### 3.5 接入方拉取取证文件接口
+### 2.4 接入方拉取取证文件接口
 
 通过这个接口，从我方后台拉取本次取证用户在清洁环境下载的文件。  
 注：为确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果等），请及时拉取文件落库。
@@ -710,7 +714,7 @@ FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 }
 ```
 
-#### 3.5.1 调用后对回包加密字段解密代码示例
+#### 2.4.1 回包字段解密代码示例
 
 ```java
 @Test
@@ -738,7 +742,7 @@ public String decryptAes(String base64EncryptedValue, SecretKey key) throws Exce
 }
 ```
 
-#### 3.5.2 解密fileUrl和fileKey后下载文件示例代码
+#### 2.4.2 文件下载示例代码
 
 清洁环境后台云存储服务配置使用了文件存储服务端加密，则接口返回的fileKey字段不为空，需用上面方法解密为一个base64的key，和解密后的fileUrl一起使用下面的代码下载文件，和普通文件下载的区别是header多设置了3个文件下载解密的参数。
 
@@ -853,7 +857,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 2. **接口调用成功返回的url有效期为5分钟，所以需要在5分钟内完成文件下载，如果过期可再次调用此接口返回新的url。**  
 注：自2023年8月21日开始，随着业务量不断增大，为了确保查询取数的服务质量和效率，只支持拉取取数10天以内的文件（包括取证原文、解析结果、存管证书），请及时拉取文件并落库；超过10天的文件需要清洁环境后端服务方定期批量处理。 -->
 
-### 3.7 拉取当前数据类型状态的接口
+### 2.5 拉取当前数据类型状态的接口
 
 * 说明：**通过这个接口，可以拉取到特定数据类型的运行情况【重要】**  
 * 由于数据官方网站可能维护/升级，导致短时间不可用，此接口用于业务方定期获知对应数据类型的可用状态。建议业务方：  
@@ -923,7 +927,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```
 
-### 3.8 拉取取证状态
+### 2.6 取数状态拉取接口
 
 * 说明：通过这个接口，可以拉取到特定取证业务运行状态  
 * 接口调用方式：  
@@ -1100,7 +1104,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ``` -->
 
-### 3.9  接入方维度日终对账单拉取接口  
+### 2.7  接入方维度日终对账单拉取接口  
 
 说明：每日凌晨3点半，会生成T-1日的接入方维度的日终对账单，供下载做对账使用。对账单接口至关重要。
 
@@ -1185,7 +1189,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 <!-- |original_site|取证的原数据类型，仅在丰巢模式切换到邮箱模式时会有值| -->
 
 
-### 3.10 接入方拉取“取证解析文件”的接口
+### 2.8 “取数解析文件”拉取接口
 
 注：  
 1. 因我方不会对数据做加工，现阶段解析后的JSON为对于原文 1：1的还原解析，格式仅支持string形式，不包含枚举、数值、字符、布尔等其他类型，如业务方需要对JSON格式重新定义，需要自行转换格式。  
@@ -1193,7 +1197,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 
 建议：我方可提供解析代码，由业务方部署在本地，收到取数原文后，在本地运行解析。建议技术能力充分的情况下本地部署。
 
-#### 3.10.1 接口说明
+#### 2.8.1 接口说明
 
 * 通过这个接口，从后台拉取本次取证的结果（成功或者失败），及文件的解析后的结构化数据下载地址（如有）  
 * 下载地址失效时间为5分钟  
@@ -1250,7 +1254,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |-44062|DA_IN_PROGRESS_EXCEPTION|取证还在过程中；若此时daStatus=10，则为解析尚未完成|非终态，需要重试|
 |-44021|DA_FAILED_EXCEPTION|此笔取证为终态失败的取证|终态，无需重试|
 
-#### 3.10.2 jsonResult的可能取值
+#### 2.8.2 jsonResult的可能取值
 
 |取值|其他|
 |:----|:----|
@@ -1262,7 +1266,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 |100|非终态，可恢复|
 |101|终态的失败|
 
-#### 3.10.3 dlResult 的可能取值
+#### 2.8.3 dlResult 的可能取值
 
 |取值|描述|其他|
 |:----|:----|:----|
@@ -1624,7 +1628,7 @@ https://testing-vdi.<服务方域名>.com/vdi/vdi.html?sessionId=de1tuknz1500809
 ``` -->
 
 
-## 4 通知（v2格式）接入方的接口说明
+## 3 通知接入方的相关接口说明
 
 
 用户取证是异步流程，由清洁环境后端服务进行处理之后使用通知方式，调用接入方预先配置给清洁环境后端的接口（单一接口），来异步通知接入方业务进度。
@@ -1636,7 +1640,7 @@ https://testing-vdi.<服务方域名>.com/vdi/vdi.html?sessionId=de1tuknz1500809
 * 通知直接包含结果文件下载地址。
 * 接入方在收到通知之后，必须立即返回errorCode为0，否则通知会不断重试。接入方仍然可以使用3.8接口主动拉取作为兜底。
 
-### 4.1 整个取证周期可能会有哪些通知
+### 3.1 整个取证周期可能会有哪些通知
 
 * 取证终态失败的通知（必选）：**daFailed**，立即发出
 * 取证原文通知/授权完成通知（必选）：**daUserAuthorized**，用户取证成功点击同意提交按钮后，且用户协议上传成功，会发送带有**取证原文件**下载地址的文件通知。若为异步下载的数据类型（如N合一），需要等待下载完成，可能会于前端同意提交后时延30s左右发出；否则立即发出。
@@ -1644,16 +1648,16 @@ https://testing-vdi.<服务方域名>.com/vdi/vdi.html?sessionId=de1tuknz1500809
 * 解析文件通知（不再提供）：**daFileParsed**，如果不是本地化解析部署，且用户协议和授权完成，则**解析完成后**会发送**带有解析结果json文件**下载地址的通知，一般时延为发出daUserAuthorized之后5~10s。**自2024年开始，本通知仅对特定客户开放，新接入方需要使用本地部署解析代码对下载的原文进行解析。**
 <!-- * index页提交完成通知（index页提交时专用，一般情况下用不到）: **daSubmittedApp**在取数平台小程序页面点击"提交数据"时的通知 -->
 
-### 4.2 通知签名的生成与验证
+### 3.2 通知签名的生成与验证
 
 注：为了简便接入，**对我方发出的通知进行验签并非必须流程**，接入方仅在需要验签的场景中，如必须确定收到的通知信息的确是由清洁环境服务端发起等类似情况下，才需验证。
 
-#### 4.2.1 清洁环境运营方生成签名
+#### 3.2.1 清洁环境运营方生成签名
 清洁环境运营方对所发出的通知使用RSA算法进行签名。清洁环境运营方的公钥会在接入方接入时，通过邮件发送给接入方。  
 清洁环境后台计算签名值后，会把数字签名值放入请求Header  
 * 接入方需要对清洁环境运营方的通知的签名进行验证，以保证数据的真实性和合法性  
 
-#### 4.2.2 接入方验证通知签名的验证方法
+#### 3.2.2 接入方验证通知签名的验证方法
 
 * 先从header里的DECSHASH字段获取通知请求参数的哈希（或参考[2.2 哈希算法](/zh/access/main?id=_22-哈希算法)算出，计算时的appKey与分配给接入方的相同）  
 * 从通知的Header里面取出DECSSIGN字段值，即为sign的值  
@@ -1678,9 +1682,9 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 }
 ```
 
-### 4.3  通知接口
+### 3.3  通知接口
 
-#### 4.3.1 接口说明
+#### 3.3.1 接口说明
 
 * 说明：每当取证状态变化的时候，会通知接入方取证状态的变化。
 * 请求URL：由接入方提供
@@ -1818,7 +1822,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 }
 ```
 
-#### 4.3.2 注意事项
+#### 3.3.2 注意事项
 
 **注意：**
 
@@ -1837,7 +1841,7 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 7. 通知的fileKey和fileUrl为明文，不做加密，可以直接使用下一节“返回值下载实例”所述的方式下载。
 8. 通知里文件url的有效期仅为5分钟，所以请收到后，立即异步处理文件下载以避免url过期导致下载失败。否则，接入方需要重新调用3.5（取证原始文件）、3.11（解析json）重新获取下载url和fileKey；而此时获取的下载url和fileKey是加密的，需要使用3.5.1的方式先解密再下载。
 
-### 4.4 返回值下载实例
+### 3.4 返回值下载实例
 
 本节为代码范例，介绍如何从通知接口的返回的加密fileKey和fileUrl完成下载。  
 注：**v2通知返回的fileKey和fileUrl一定是明文**，而主动拉取的返回结果为AES加密的。因此v2通知的fileKey和fileUrl可以不经过AES解密再使用（如3.5.2）；但主动拉取的返回结果需要先解密再下载（3.5.1+3.5.2）。  
@@ -1866,7 +1870,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 
 这里理论上可能会出现的错误码，一般来说为403和400。若出现403错误，多为链接超时（下载链接有效期是5min），请重新调用拉取接口获取最新链接并重试。若出现400错误，请联系我们，并提供具体错误信息。
 
-### 4.5 无法接收通知场景下的建议兜底方案
+### 3.5 建议兜底方案
 
 通知不能保证必达，如因双方服务器问题或网络问题等原因，导致通知不能到达，接入方需要针对此异常场景根据daId做兜底的超时拉取处理逻辑。一般地，将单次取证链接的生成时间记为T0，成功完成（daStatus=0 且 authorizedTs>0）记为T，则平均解析完成时间、最大超时时间为：
 
