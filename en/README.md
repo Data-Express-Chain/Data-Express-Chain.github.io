@@ -4,20 +4,20 @@ Nowadays, it is difficult for individual users to effectively ensure the authent
 
 ## Data Source
 
-* Chiyu Banking Transacation Records
-* Tax Payment e-receipt
+* Chiyu banking transacation records
+* Tax payment e-receipt
 
 ## Terminology
 
 | **Terminology** | **Meaning**                                                                                                                           |
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| DECS                  | Short for Data Express Chain System                                                                                                         |
+| DECS                  | Abbreviation for Data Express Chain System                                                                                                  |
 | Data Fetching         | The procedure that user login to the official website or application, download and authorize the specified data to the System Integrator |
 | System Provider       | Organization to deploy the DECS system                                                                                                      |
 | System Integrator     | Organization to access to DECS and integrate its functionalities                                                                            |
 | System User           | User of DECS to conduct data fetching                                                                                                       |
-| Clean Environment     | Remote software environment where data fetching happens                                                                                     |
-| VDI                   | The specific Virtual Machine of a clean environment                                                                                         |
+| Trusted Environment   | Remote clean and trusted software environment where data fetching is done                                                                   |
+| VDI                   | The specific Virtual Machine of a trusted environment                                                                                       |
 | Success Page          | The page after a successful data fetching, provided by System Integrator                                                                    |
 | Failure Page          | The page after a failed data fetching, provided by System Integrator                                                                       |
 | Original-File         | The original data file acquired directly from data source                                                                                   |
