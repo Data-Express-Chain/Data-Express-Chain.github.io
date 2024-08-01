@@ -10,7 +10,7 @@ Nowadays, it is difficult for individual users to effectively ensure the authent
 | --------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | DECS                  | Abbreviation for Data Express Chain System                                                                                |
 | Data Fetching         | The procedure that user login to the official website or application, download and authorize the specified data to you |
-| System Provider       | Organization to deploy the DECS system                                                                                    |
+| System Provider       | Organization to deploy the DECS system (e.g. TransUnion)                                                                  |
 | System User           | User of DECS to conduct data fetching                                                                                     |
 | Trusted Environment   | Remote clean and trusted software environment where data fetching is done                                                 |
 | VDI                   | The specific Virtual Machine of a trusted environment                                                                     |
