@@ -1,4 +1,4 @@
-## 1 API Authentication
+## 1. API Authentication
 
 When calling **all APIs** in Chapter 2, it is **REQUIRED** to generate the authentication header using the method described in this chapter.
 
@@ -154,7 +154,7 @@ When calling authentication interface, there is a small chance that some common 
 | -48007     | ExternalLBError | External network redirect error (temporary), please try again later |
 | -50005     | SignInvalid     | DECSHASH calculation error                                          |
 
-## 2 API List
+## 2. API List
 
 ### Update AES Key
 
@@ -1166,7 +1166,7 @@ Recommendation: We can provide parsing code for deployment by the business party
 2. The URLs returned upon successful invocation of the interface are valid for 5 minutes. Therefore, it is necessary to complete the file download within 5 minutes. If the URL expires, you can call this interface again to obtain a new URL.
 3. Parsing may fail due to changes in the file format of user files of original data sources or the emergence of new format use cases that are not covered, resulting in the temporary unavailability of jsonFileUrl. We will handle the re-adaptation of parsing and release a new version within 14 days to address this. Therefore, you need to consider this exceptional scenario and support fallback retries within 14 days.
 
-## 3 Notification
+## 3. Notification
 
 The process of data fetching is asynchronous and handled by the trusted environment backend service. After processing, it uses a notification method to call the interface (a single interface) that you pre-configured for the trusted environment backend, to asynchronously notify you of the business progress.
 
