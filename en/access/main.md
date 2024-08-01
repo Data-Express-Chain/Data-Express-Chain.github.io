@@ -1,4 +1,4 @@
-## 1. API Authentication Header
+## 1. API Authentication
 
 When calling **all APIs** in Chapter 2, it is **REQUIRED** to generate the authentication header using the method described in this chapter.
 
@@ -6,9 +6,9 @@ When calling **all APIs** in Chapter 2, it is **REQUIRED** to generate the authe
 
 * All openapi requests are **POST** requests, and the content-type is always **application/json**.
 
-### 1.2 Header Generation
+### 1.2 How to Generate Authentication Header
 
-#### 1.2.1 Parameters Preparation
+#### 1.2.1 Prepare Parameters
 
 For example, the interface request parameters are as follows:
 
@@ -26,7 +26,7 @@ For example, the interface request parameters are as follows:
 }
 ```
 
-#### 1.2.2 Parameters Sorting
+#### 1.2.2 Sort Parameters
 
 Note that the request parameters JSON is generally a multi-level structure, each level needs to be sorted by key in ASCII dictionary order.
 For example, the sorted request parameters JSON are as follows:
@@ -45,7 +45,7 @@ For example, the sorted request parameters JSON are as follows:
 }
 ```
 
-#### 1.2.3 Parameters Serialization
+#### 1.2.3 Serialize Parameters
 
 * Note: Remove all whitespace characters from the JSON string.
 
@@ -53,7 +53,7 @@ For example, the sorted request parameters JSON are as follows:
 {"arg":{"a":"xxx","b":"xxx"},"auth":{"appId":"IDAkEBvb","nonce":"20rr7wbca98e8325f0fjd77yl130j6hi"},"v":"1.0.0"}"
 ```
 
-#### 1.2.4 Hash Calculation
+#### 1.2.4 Calculate Hash Value
 
 Append the appKey to the end of the sortedJson to get the sortedJsonWithKey string. Perform HMAC-SHA256 operation on sortedJsonWithKey (if needed, use the appKey as the key for the operation). Convert all characters of the resulting string to uppercase to get the unsignedData. Note: The length of the appKey is 64 bytes.
 
@@ -65,7 +65,7 @@ sortedJsonWithKey = sortedJson + "FcuMaP8q39Q4IigraXdDKpvaOhF2PqNptq86ZHYRvtMjAd
 decsHash = HMAC-SHA256("HmacSHA256", sortedJsonWithKey).toUpperCase() = "C3AF574420D41A7CEE9C44FCFC84FE15D36D5C97A80111278B82CCEAFCDC7C96";
 ```
 
-#### 1.2.5 Append Hash to Request Header
+#### 1.2.5 Append Hash Value to Request Header
 
 Add a field DECSHASH to the HTTP Header, with the value being the hash calculated in the previous step.
 
@@ -288,7 +288,7 @@ For AES, use aes-128-ecb as default ciper
 
 Before accessing the trusted environment officially, the System Integrator needs to prompt the System Provider's end user to sign a user agreement with the trusted environment service provider and upload it upon completion. **This interface can be called asynchronously**. If the call fails, it does not affect the mainstream process of user data fetching.
 
-#### 2.2.2 API Name
+#### 2.2.2 API Path
 
 | API Path                                                                                                | Method | Content-Type     |
 | :------------------------------------------------------------------------------------------------------ | :----- | :--------------- |
