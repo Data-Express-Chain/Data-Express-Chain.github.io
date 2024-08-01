@@ -1,14 +1,14 @@
-## 1. API Authentication
+## 1 API Authentication
 
 When calling **all APIs** in Chapter 2, it is **REQUIRED** to generate the authentication header using the method described in this chapter.
 
-### 1.1 Notes
+### Notes
 
 * All openapi requests are **POST** requests, and the content-type is always **application/json**.
 
-### 1.2 How to Generate Authentication Header
+### How to Generate Authentication Header
 
-#### 1.2.1 Prepare Parameters
+#### Setp1: Prepare Parameters
 
 For example, the interface request parameters are as follows:
 
@@ -26,7 +26,7 @@ For example, the interface request parameters are as follows:
 }
 ```
 
-#### 1.2.2 Sort Parameters
+#### Setp2: Sort Parameters
 
 Note that the request parameters JSON is generally a multi-level structure, each level needs to be sorted by key in ASCII dictionary order.
 For example, the sorted request parameters JSON are as follows:
@@ -45,7 +45,7 @@ For example, the sorted request parameters JSON are as follows:
 }
 ```
 
-#### 1.2.3 Serialize Parameters
+#### Setp3: Serialize Parameters
 
 * Note: Remove all whitespace characters from the JSON string.
 
@@ -53,7 +53,7 @@ For example, the sorted request parameters JSON are as follows:
 {"arg":{"a":"xxx","b":"xxx"},"auth":{"appId":"IDAkEBvb","nonce":"20rr7wbca98e8325f0fjd77yl130j6hi"},"v":"1.0.0"}"
 ```
 
-#### 1.2.4 Calculate Hash Value
+#### Setp4: Calculate Hash Value
 
 Append the appKey to the end of the sortedJson to get the sortedJsonWithKey string. Perform HMAC-SHA256 operation on sortedJsonWithKey (if needed, use the appKey as the key for the operation). Convert all characters of the resulting string to uppercase to get the unsignedData. Note: The length of the appKey is 64 bytes.
 
@@ -65,7 +65,7 @@ sortedJsonWithKey = sortedJson + "FcuMaP8q39Q4IigraXdDKpvaOhF2PqNptq86ZHYRvtMjAd
 decsHash = HMAC-SHA256("HmacSHA256", sortedJsonWithKey).toUpperCase() = "C3AF574420D41A7CEE9C44FCFC84FE15D36D5C97A80111278B82CCEAFCDC7C96";
 ```
 
-#### 1.2.5 Append Hash Value to Request Header
+#### Setp5: Append Hash Value to Request Header
 
 Add a field DECSHASH to the HTTP Header, with the value being the hash calculated in the previous step.
 
@@ -74,7 +74,7 @@ Map<String, String> header = new HashMap<>();
 header.put("DECSHASH", decsHash);
 ```
 
-#### 1.2.6 Code Example
+#### Code Example
 
 ```java
 import com.fasterxml.jackson.databind.JsonNode;
@@ -145,7 +145,7 @@ public class DecsHashTool {
 }
 ```
 
-### 1.3 Error Codes of Authentication
+### Error Codes of Authentication
 
 When calling authentication interface, there is a small chance that some common interface errors may occur, as follows:
 
@@ -156,9 +156,9 @@ When calling authentication interface, there is a small chance that some common 
 
 ## 2 API List
 
-### 2.1 Update AES Key
+### Update AES Key
 
-#### 2.1.1 API Description
+#### * API Description
 
 When you call the related interfaces of the trusted environment (or receives notifications), in order to protect the sensitive information of the System End-User (user agreement, user name, user ID number, user's Original-File URL) from leakage, these sensitive information need to be encrypted using the AES algorithm. To ensure the security of the encryption and decryption key, it is recommended that you periodically calls this interface to update the AES encryption key (hereinafter referred to as aesKey) together with the trusted environment System Provider.
 
@@ -167,7 +167,7 @@ When you call the related interfaces of the trusted environment (or receives not
 1. The frequency of updating the aesKey can be arbitrary, but we recommended to update it only when necessary and only in the moment when user query volume is low.
 2. During the process of updating the aesKey, there may be a time difference between you and the trusted environment System Provider in saving and using the new aesKey. At the moment of updating, the aesKey used for encryption and decryption on both sides may be inconsistent. If this happens, the request will fail and a specific encryption or decryption failure error code will be received. It is recommended that you resend the request upon receiving such error code to avoid this issue.
 
-#### 2.1.2 API Path
+#### * API Path
 
 | API Path                                                                                       | Method | Content-Type     |
 | :--------------------------------------------------------------------------------------------- | :----- | :--------------- |
@@ -176,7 +176,7 @@ When you call the related interfaces of the trusted environment (or receives not
 
 Note: For the specific System Provider domain, please contact your Tech Support.
 
-#### 2.1.3 Input Parameters
+#### * Input Parameters
 
 | Parameter Name | Type   | Description                                                                                   | Required | Length |
 | :------------- | :----- | :-------------------------------------------------------------------------------------------- | :------- | :----- |
@@ -201,7 +201,7 @@ Note: For the specific System Provider domain, please contact your Tech Support.
 }
 ```
 
-#### 2.1.4 Output Parameters
+#### * Output Parameters
 
 | Parameter    | Type   | Description                                                                                                                                                                                                                                                                                           | Required |
 | :----------- | :----- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
@@ -222,7 +222,7 @@ Note: For the specific System Provider domain, please contact your Tech Support.
 }
 ```
 
-#### 2.1.5 Code Example
+#### * Code Example
 
 Java:
 
@@ -282,13 +282,13 @@ Due to NodeJs's default encryption component `node-rsa` library, which uses pkcs
 
 For AES, use aes-128-ecb as default ciper
 
-### 2.2 Upload User Agreement
+###  Upload User Agreement
 
-#### 2.2.1 API Description
+#### * API Description
 
 Before accessing the trusted environment officially, you need to prompt the System Provider's end user to sign a user agreement with the trusted environment service provider and upload it upon completion. **This interface can be called asynchronously**. If the call fails, it does not affect the mainstream process of user data fetching.
 
-#### 2.2.2 API Path
+#### * API Path
 
 | API Path                                                                                                | Method | Content-Type     |
 | :------------------------------------------------------------------------------------------------------ | :----- | :--------------- |
@@ -297,7 +297,7 @@ Before accessing the trusted environment officially, you need to prompt the Syst
 
 Note: For the specific Service Provider Domain, please contact your Tech Support.
 
-#### 2.2.3 Input Parameters
+#### * Input Parameters
 
 | Parameter Name      | Type         | Description                                                                                                                                                                                                                                                                                                                   | Required | Length |
 | :------------------ | :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :----- |
@@ -335,7 +335,7 @@ Note: For the specific Service Provider Domain, please contact your Tech Support
 }
 ```
 
-#### 2.2.4 Output Parameters
+#### * Output Parameters
 
 | Parameter    | Type    | Description                                       | Required |
 | :----------- | :------ | :------------------------------------------------ | :------- |
@@ -362,7 +362,7 @@ Special Error Codes
 }
 ```
 
-#### 2.2.5 Code Example
+#### * Code Example
 
 ```java
 @Test
@@ -401,9 +401,9 @@ String downloadFileSavePath = "D:\\save.pdf";
 FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 ```
 
-### 2.3 Start Data Fetching
+### Start Data Fetching
 
-#### 2.3.1 API Description
+#### * API Description
 
 Before accessing the trusted environment, you need to call this interface to request a VDI slot. After successful invocation, the backend will return a URL link for your frontend page to redirect to.
 
@@ -414,7 +414,7 @@ Before accessing the trusted environment, you need to call this interface to req
   4. This interface request returns or times out
   5. Stop triggering animation. If this interface returns successfully, redirect to the trusted environment; if it fails, show the corresponding error.
 
-#### 2.3.2 API Path
+#### * API Path
 
 | API Path                                                                                         | Method | Content-Type     |
 | :----------------------------------------------------------------------------------------------- | :----- | :--------------- |
@@ -423,7 +423,7 @@ Before accessing the trusted environment, you need to call this interface to req
 
 Note: Please contact your tech support for specific Service Provider Domain.
 
-#### 2.3.3 Input Parameters
+#### * Input Parameters
 
 | Parameter Name                                | Type         | Description                                                                                                                                                                                                                                                                                                                                              | Required | Length Limit                                           |
 | :-------------------------------------------- | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- | :----------------------------------------------------- |
@@ -481,7 +481,7 @@ Note: Please contact your tech support for specific Service Provider Domain.
 }
 ```
 
-#### 2.3.4 Output Parameters
+#### * Output Parameters
 
 | Parameter        | Type   | Description                                               | Required |
 | :--------------- | :----- | :-------------------------------------------------------- | :------- |
@@ -529,7 +529,7 @@ Note: If accessing through HTML5 within the app, and the data source type that n
 * Your app needs to have already requested camera permissions;
 * If your app is an Android version, it needs to be able to respond to webview's camera activation request. If your app has not implemented this function yet, we can provide sample reference code.
 
-#### 2.3.5 Trusted Environment URL Generation
+#### * Trusted Environment URL Generation
 
 1. Sign the `redirectUrl` in the returned parameters using the private key of the RSA key pair from you (the public key needs to be provided to us in advance), and obtain the `sign` field.
 
@@ -588,7 +588,7 @@ public class CryptoTool {
 }
 ```
 
-#### 2.3.6 HTML5 callback URL handling
+#### * HTML5 callback URL handling
 
 * After the user completes the operation, the VDI page will open your result page and carry the parameters bizNo, daId, daStatus, site, and possibly attach_url and status.
 * Example of the result URL:
@@ -597,7 +597,7 @@ public class CryptoTool {
 https://www.yyy.com/jumpChannel.html?attach_url=channel_a&bizNo=acf1700443444e7b9206c6d5b36ec955&daId=zd240e1e1722158295759228928&site=app-tax-income&daStatus=10
 ```
 
-#### 2.3.7 Code Example
+#### * Code Example
 
 **Encrypt Parameters**
 
@@ -626,15 +626,15 @@ public String encryptAES(String value, SecretKey key) throws Exception {
 }
 ```
 
-### 2.4 Download Original File
+### Download Original File
 
-#### 2.4.1 API Description
+#### * API Description
 
 Through this interface, retrieve the files downloaded by the end user from our backend in the current data fetching session. Only files within 10 days of data fetching (including original data & parsing results) are supported for retrieval. Please pull the files into the database promptly.
 
 The download link will expire in 5 minutes.
 
-#### 2.4.2 API Path
+#### * API Path
 
 | API Path                                                                     | Method | Content-Type     |
 | :--------------------------------------------------------------------------- | :----- | :--------------- |
@@ -643,7 +643,7 @@ The download link will expire in 5 minutes.
 
 Note: Please contact your Tech Support to obtain the specific Service Provider Domain.
 
-#### 2.4.3 Input Parameters
+#### * Input Parameters
 
 | Parameter Name | Type   | Description                                                                                                              | Required | Length |
 | :------------- | :----- | :----------------------------------------------------------------------------------------------------------------------- | :------- | :----- |
@@ -655,7 +655,7 @@ Note: Please contact your Tech Support to obtain the specific Service Provider D
 | arg.daId       | String | data fetching ID                                                                                                         | Y        | 32     |
 | arg.ext        | Object | Reserved field, ext is an object for extension                                                                           | N        |        |
 
-#### 2.4.4 Output Parameters
+#### * Output Parameters
 
 | Parameter            | Type   | Description                                                                                                                                                                                                                                                                                                                                        | Field Always Exists |
 | :------------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------ |
@@ -706,7 +706,7 @@ Note: Please contact your Tech Support to obtain the specific Service Provider D
 }
 ```
 
-#### 2.4.5 Code Example
+#### * Code Example
 
 1. decrypt response
 
@@ -759,9 +759,9 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```
 
-### 2.5 Get Data Source Availability
+### Get Data Source Availability
 
-#### 2.5.1 API Description
+#### * API Description
 
 Through this interface, you can pull the running status of specific data sources. [Important]
 
@@ -770,7 +770,7 @@ Note: Due to possible maintenance/upgrades of the data official website, resulti
 1. **Regularly pull the available status of data sources via scheduled tasks (cronjob) and save this status**, preferably every 5 minutes. If there is a large number of users, the frequency can be increased.
 2. **Based on the locally saved site availability status, control the display/hide of corresponding site user entry points on the business entry page using switches**.
 
-#### 2.5.2 API Path
+#### * API Path
 
 | API Path                                                                                             | Method | Content-Type     |
 | :--------------------------------------------------------------------------------------------------- | :----- | :--------------- |
@@ -779,7 +779,7 @@ Note: Due to possible maintenance/upgrades of the data official website, resulti
 
 Note: Please contact your tech support to obtain the specific service provider domain.
 
-#### 2.5.3 Input Parameters
+#### * Input Parameters
 
 | Parameter Name | Type   | Description                                                                                                      | Required | Length Limit |
 | :------------- | :----- | :--------------------------------------------------------------------------------------------------------------- | :------- | :----------- |
@@ -806,7 +806,7 @@ Note: Please contact your tech support to obtain the specific service provider d
 }
 ```
 
-#### 2.5.4 Output Parameters
+#### * Output Parameters
 
 | Parameter        | Type   | Description                                                                                                                                                                                  | Required |
 | :--------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------- |
@@ -838,13 +838,13 @@ Note: Please contact your tech support to obtain the specific service provider d
 }
 ```
 
-### 2.6 Get Data Fetching Status
+### Get Data Fetching Status
 
-#### 2.6.1 API Description
+#### * API Description
 
 This interface allows retrieving the status of a specific data fetching request.
 
-#### 2.6.2 API Path
+#### * API Path
 
 | API Path                                                                                        | Method | Content-Type     |
 | :---------------------------------------------------------------------------------------------- | :----- | :--------------- |
@@ -853,7 +853,7 @@ This interface allows retrieving the status of a specific data fetching request.
 
 Note: Please contact your integration colleague to obtain the specific service provider domain.
 
-#### 2.6.3 Input Parameters
+#### * Input Parameters
 
 | Parameter Name | Type   | Description                                                                                                                | Required | Length Limitation |
 | :------------- | :----- | :------------------------------------------------------------------------------------------------------------------------- | :------- | :---------------- |
@@ -880,7 +880,7 @@ Note: Please contact your integration colleague to obtain the specific service p
 }
 ```
 
-#### 2.6.4 Output Parameters
+#### * Output Parameters
 
 | Parameter            | Type   | Description                                                                                                                                                                                                                                                                                                                                                   | Required |
 | :------------------- | :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :------- |
@@ -969,13 +969,13 @@ Another example with child sites:
 }
 ```
 
-### 2.7 Get Daily Bill
+### Get Daily Bill
 
-#### 2.7.1 API Description
+#### * API Description
 
 Every day at 3:30 AM, the reconciliation bill for the previous day is generated for downloading and reconciliation use.
 
-#### 2.7.2 API Path
+#### * API Path
 
 | API Path                                                                                                                                               | Method | Content-Type     |
 | :----------------------------------------------------------------------------------------------------------------------------------------------------- | :----- | :--------------- |
@@ -984,7 +984,7 @@ Every day at 3:30 AM, the reconciliation bill for the previous day is generated 
 
 Note: Please contact your tech support to obtain the specific service domain.
 
-#### 2.7.3 Input Parameters
+#### * Input Parameters
 
 | Parameter  | Type   | Description                                                                                                            | Required | Length Limit |
 | :--------- | :----- | :--------------------------------------------------------------------------------------------------------------------- | :------- | :----------- |
@@ -1010,7 +1010,7 @@ Note: Please contact your tech support to obtain the specific service domain.
 }
 ```
 
-#### 2.7.4 Output Parameters
+#### * Output Parameters
 
 | Parameter    | Type   | Description                                   | Required |
 | :----------- | :----- | :-------------------------------------------- | :------- |
@@ -1055,16 +1055,16 @@ Note: Please contact your tech support to obtain the specific service domain.
 | user_protocol_upload_flag | Y means user agreement uploaded, N means not uploaded                                                                                    |
 | create_time               | Time of acquisition order creation                                                                                                       |
 
-### 2.8 Download Parsed File
+### Download Parsed File
 
-#### 2.8.1 API Description
+#### * API Description
 
 This interface is used to pull the result (success or failure) of the current acquisition from the backend, along with the structured data download URL of the parsed file (if available).
 
 * The download URL expires in 5 minutes.
 * **You need to download and decrypt the parsing results in the same way as 3.5.1 and 3.5.2.** Only files within 10 days of acquisition (including acquisition original text, parsing results, and custody certificates) are supported for retrieval. Please retrieve files promptly for storage.
 
-#### 2.8.2 API Path
+#### * API Path
 
 | API Path                                                                      | Method | Content-Type     |
 | :---------------------------------------------------------------------------- | :----- | :--------------- |
@@ -1080,7 +1080,7 @@ Note:
 
 Recommendation: We can provide parsing code for deployment by the business party locally. Upon receiving the original data, run the parsing locally. Deployment locally is recommended for cases where technical capabilities are sufficient.
 
-#### 2.8.3 Input Parameters
+#### * Input Parameters
 
 | Parameter Name | Type   | Description                                                                     | Required | Length |
 | :------------- | :----- | :------------------------------------------------------------------------------ | :------- | :----- |
@@ -1092,7 +1092,7 @@ Recommendation: We can provide parsing code for deployment by the business party
 | arg.daId       | String | Acquisition ID                                                                  | Y        | 32     |
 | arg.ext        | Object | Spare field, ext is an object used for expansion                                | N        |        |
 
-#### 2.8.4 Output Parameters
+#### * Output Parameters
 
 | Parameter                         | Type   | Description                                                                                                                                                                                                                                                | Field Always Present |
 | :-------------------------------- | :----- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------- |
@@ -1172,24 +1172,24 @@ The process of data fetching is asynchronous and handled by the trusted environm
 
 After receiving the notification, you must immediately return an errorCode of 0, otherwise the notification will keep retrying. You can still use the get data fetching status API to actively pull as a fallback. This will be described in the last section of this chapter.
 
-### 3.1 Notification Types
+### Notification Types
 
 * Notification of the final state of data fetching failure (required): **daFailed**, issued immediately
 * data fetching Original File Notification/Authorization Completion Notification (required): **daUserAuthorized**, after the user data fetching is successful and the user agreement is uploaded successfully, a file notification with the download address of the **Original-File** will be sent. If it is an asynchronous download data source, it needs to wait for the download to be completed, which may be issued about 30s after the front-end agrees to submit; otherwise, it is issued immediately.
 * Parsed-Original-File Notification: **daFileParsed**, if it is not a localized parsing deployment, and the user agreement and authorization are completed, a notification with the download address of the **parsing result json file** will be sent after **parsing is completed**, generally delayed for 5 to 10 seconds after issuing daUserAuthorized.
 
-### 3.2 Notification Signature Verification
+### Notification Signature Verification
 
 Note: To facilitate integration, **verifying the signature of the notifications issued by us is not a mandatory process**. You only need to verify in scenarios where verification is required, such as when it is necessary to ensure that the received notification information is indeed initiated by the trusted environment server.
 
-#### 3.2.1 Signature Generation
+#### * Signature Generation
 
 The trusted environment operator signs the issued notifications using the RSA algorithm. The public key of the trusted environment operator will be sent to you separately.
 After calculating the signature value, the trusted environment backend puts the digital signature value into the request Header.
 
 * You need to verify the signature of the notification from the trusted environment operator to ensure the authenticity and legality of the data.
 
-#### 3.2.2 Signature Verification
+#### * Signature Verification
 
 * First, retrieve the hash of the notification request parameters from the DECSHASH field in the header (calculate the hash while ensuring the appKey is the same as the one allocated to you).
 * Extract the DECSSIGN field value from the notification's Header, which is the value of the sign.
@@ -1214,9 +1214,9 @@ public static PublicKey string2PublicKey(String base64PublicKey) throws Exceptio
 }
 ```
 
-### 3.3 Notification API
+### Notification API
 
-#### 3.3.1 API Description
+#### * API Description
 
 Whenever there is a change in the data fetching status, you will be notified of the change in status.
 
@@ -1224,7 +1224,7 @@ Whenever there is a change in the data fetching status, you will be notified of 
 * Request Method: **POST**
 * Request Header: **Content-Type: application/json**
 
-#### 3.3.2 Input Parameters
+#### * Input Parameters
 
 | Parameter                           | Type       | Description                                                                                                                                                                                                                                                                     | Required | Length Limit   |
 | ----------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------- |
@@ -1261,7 +1261,7 @@ Whenever there is a change in the data fetching status, you will be notified of 
 **Note:** The notification return fields are **not encrypted with aesKey**. The timing of the aesKey call is determined by you, and the trusted environment data collection backend cannot store the old aesKey for each data collection. Therefore, all notification fields are unencrypted.
 Note 2: There is **no unzipPassword** in the return fields of the notification.
 
-#### 3.3.3 Output Parameters
+#### * Output Parameters
 
 * **You must use the following return parameters as the response body**:
 
@@ -1270,7 +1270,7 @@ Note 2: There is **no unzipPassword** in the return fields of the notification.
 | errorCode    | int    | Return code: 0 for success, non-zero for others | Y        |
 | errorMessage | String | Return result description                       | Y        |
 
-#### 3.3.4 Notification Examples
+#### * Notification Examples
 
 * Original File Example
 
@@ -1344,7 +1344,7 @@ Note 2: There is **no unzipPassword** in the return fields of the notification.
 }
 ```
 
-#### 3.3.5 Important Notes
+#### * Important Notes
 
 1. Based on the received notification, the timing for file retrieval should be judged as follows:
 
@@ -1359,7 +1359,7 @@ Note 2: There is **no unzipPassword** in the return fields of the notification.
 7. The fileKey and fileUrl in the notification are in plain text and are not encrypted, and can be downloaded directly using the method described in the next section "Return Value Download Example."
 8. The validity period of the file URL in the notification is only 5 minutes, so please handle the file download asynchronously immediately after receiving to avoid the URL expiring and causing a download failure. Otherwise, you need to call 3.5 (original file), and 3.11 (parsed json) again to retrieve the download URL and fileKey; at this time, the obtained download URL and fileKey are encrypted and need to be decrypted first using the method in 3.5.1 before downloading.
 
-### 3.4 Download Notification Files
+### Download Notification Files
 
 This section provides a code example on how to download using the encrypted fileKey and fileUrl returned from the notification interface.
 
@@ -1388,7 +1388,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```
 
-### 3.5 Fallback when Notification Fails
+### Fallback when Notification Fails
 
 Notifications **CANNOT** be guaranteed to be delivered due to server issues or network problems on either side, which may prevent the notification from reaching its destination. The accessing party needs to implement a contingency retrieval logic based on `daId` for this exceptional scenario. Generally, the time when the data fetching link is generated is marked as T0, and the successful completion (with `daStatus=0` and `authorizedTs>0`) is marked as T. The average parsing completion time, and maximum timeout time are as follows:
 

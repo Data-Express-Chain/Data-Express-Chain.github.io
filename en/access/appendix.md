@@ -1,8 +1,8 @@
-## 1. Supported AccessWay
+## Supported AccessWay
 
 Only "h5" is supported.
 
-## 2. Supported Data Sources
+## Supported Data Sources
 
 Note: For asynchronous download data sources, a notification with daStatus = 10 will only be issued after all files have been successfully downloaded.
 
@@ -11,7 +11,7 @@ Note: For asynchronous download data sources, a notification with daStatus = 10 
 | chrome-chiyubank-jyj | Chiyu banking transaction records | Chiyu Bank Website            | h5        | csv: 1 (zip)        | PC                        |
 | chrome-govhk-tax     | Tax payment e-receipt (HK)        | Hongkong Personal Tax Website | h5        | pdf: 1 (zip)        | PC                        |
 
-## 3. daStatus Values
+## daStatus Values
 
 | Status Name                                                | daStatus                                | Description                                                                                                                                                                                                                                                                                                               | Final State?                                                                   | Notify System Integrator?                                                            | Valid Operation? |
 | :--------------------------------------------------------- | :-------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------------------------------------------------------------- | :----------------------------------------------------------------------------------- | :--------------- |
@@ -45,7 +45,7 @@ Note: For asynchronous download data sources, a notification with daStatus = 10 
   * The data format downloaded from the data source may be pdf/xls/csv/txt, etc.
   * **For the same user (idno) from the same integrator (appId), on the same** **calendar day** **(counted by the time the start-vdi** **request is initiated**), obtaining the same data source (site), only the first valid operation is charged. Other repeated data collection operations for the same site, whether valid or not, are not charged.
 
-## 4. jsonResult Values
+## jsonResult Values
 
 | Value        | Other                                                                                        |
 | :----------- | :------------------------------------------------------------------------------------------- |
@@ -55,7 +55,7 @@ Note: For asynchronous download data sources, a notification with daStatus = 10 
 | 12           | No user data after file parsing                                                              |
 | 13           | The company name parsed for the enterprise version data source does not match the input name |
 
-## 5. daSubStatus Values
+## daSubStatus Values
 
 Note: daSubStatus is only for detailing the reasons for authentication failure and is not a criterion for billing.
 (This table will be iteratively updated with supported data sources, the listed error codes will not be changed)
@@ -66,7 +66,7 @@ Note: daSubStatus is only for detailing the reasons for authentication failure a
 | 44       | 81535       | No data                   |
 |          | 100099      | Not the person themselves |
 
-## 6. How to Generate RSA Public and Private Key-Pair
+## How to Generate RSA Public and Private Key-Pair
 
 It is recommended to generate them using the command line in a Linux environment.
 
@@ -80,7 +80,7 @@ openssl rsa -in rsa_private_key.pem -pubout -out rsa_public_key.pem
 // Convert pkcs1 format private key to pkcs8 format private key rsa_private_key_pkcs8.pem openssl pkcs8 -topk8 -inform PEM -in rsa_private_key.pem -outform PEM -nocrypt -out rsa_private_key_pkcs8.pem
 ```
 
-## 7. How to Download Encrypted Data Fetching Results
+## How to Download Encrypted Data Fetching Results
 
 If file storage service server-side encryption is configured, the fileKey field returned by the file pull interface is not empty. You need to decrypt it into a base64 filekey, and use it together with the decrypted fileUrl to download the file using the code below. The difference from normal file download is that three additional parameters for file download decryption are set in the header.
 
@@ -105,7 +105,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```
 
-## 8. Production Pre-Launch Checklist
+## Production Pre-Launch Checklist
 
 1. Common Sections
 
