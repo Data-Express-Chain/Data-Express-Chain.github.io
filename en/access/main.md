@@ -156,7 +156,7 @@ When calling authentication interface, there is a small chance that some common 
 
 ## 2 API List
 
-### 2.1 AES Key Updating
+### 2.1 Update AES Key
 
 #### 2.1.1 API Description
 
@@ -282,7 +282,7 @@ Due to NodeJs's default encryption component `node-rsa` library, which uses pkcs
 
 For AES, use aes-128-ecb as default ciper
 
-### 2.2 User Agreement Uploading
+### 2.2 Upload User Agreement
 
 #### 2.2.1 API Description
 
@@ -626,7 +626,7 @@ public String encryptAES(String value, SecretKey key) throws Exception {
 }
 ```
 
-### 2.4 Original File Downloading
+### 2.4 Download Original File
 
 #### 2.4.1 API Description
 
@@ -652,7 +652,7 @@ Note: Please contact your Tech Support to obtain the specific Service Provider D
 | auth.appId     | String | Enter the pre-assigned appId                                                                                             | Y        | 8      |
 | auth.nonce     | String | 32-bit random string (a combination of letters and numbers), a different value must be passed each time the call is made | Y        | 32     |
 | arg            | Object |                                                                                                                          | Y        |        |
-| arg.daId       | String | data fetching ID                                                                                                       | Y        | 32     |
+| arg.daId       | String | data fetching ID                                                                                                         | Y        | 32     |
 | arg.ext        | Object | Reserved field, ext is an object for extension                                                                           | N        |        |
 
 #### 2.4.4 Output Parameters
@@ -662,7 +662,7 @@ Note: Please contact your Tech Support to obtain the specific Service Provider D
 | errorCode            | int    | Result return code: 0: Success, non-zero: Failure (0 only represents the success of this request, no backend service error, does not represent the success of data fetching; specifically,**if the user-signed agreement certificate file sent by the System Integrator has not been received yet, a specific error code will be returned**) | Y                   |
 | errorMessage         | String | Description of the return result                                                                                                                                                                                                                                                                                                                   | Y                   |
 | data                 | Object |                                                                                                                                                                                                                                                                                                                                                    | Object              |
-| data.daId            | String | data fetching ID                                                                                                                                                                                                                                                                                                                                 | string              |
+| data.daId            | String | data fetching ID                                                                                                                                                                                                                                                                                                                                   | string              |
 | data.bizNo           | String | Business-level transaction number (not returned in the case of fullminiapp)                                                                                                                                                                                                                                                                        | Y                   |
 | data.fileUrl         | Array  | URL of the downloaded source file, it is an array indicating that there may be multiple files (pdf, csv, or xls, etc.). If data fetching fails, this array is empty*Note: Upon receiving this field, the System Integrator needs to first decode it using Base64, then decrypt it using aesKey.*                                                 | Y                   |
 | data.site            | String | data source accessed by the user:[possible values for site](/en/access/appendix?id=_2-supported-data-types-site)                                                                                                                                                                                                                                      | Y                   |
@@ -759,7 +759,7 @@ void testDownloadUsingPresignedUrl() throws Exception{
 }
 ```
 
-### 2.5 Data Source Availability
+### 2.5 Get Data Source Availability
 
 #### 2.5.1 API Description
 
@@ -838,7 +838,7 @@ Note: Please contact your tech support to obtain the specific service provider d
 }
 ```
 
-### 2.6 Data Fetching Status
+### 2.6 Get Data Fetching Status
 
 #### 2.6.1 API Description
 
@@ -969,7 +969,7 @@ Another example with child sites:
 }
 ```
 
-### 2.7 Daily Bill
+### 2.7 Get Daily Bill
 
 #### 2.7.1 API Description
 
@@ -1055,7 +1055,7 @@ Note: Please contact your tech support to obtain the specific service domain.
 | user_protocol_upload_flag | Y means user agreement uploaded, N means not uploaded                                                                                    |
 | create_time               | Time of acquisition order creation                                                                                                       |
 
-### 2.8 Parsed File Downloading
+### 2.8 Download Parsed File
 
 #### 2.8.1 API Description
 
@@ -1222,26 +1222,23 @@ Whenever there is a change in the data fetching status, the System Integrator wi
 
 * Request URL: **Provided by the System Integrator**
 * Request Method: **POST**
-
 * Request Header: **Content-Type: application/json**
-
-
 
 #### 3.3.2 Input Parameters
 
 | Parameter                           | Type       | Description                                                                                                                                                                                                                                                                     | Required | Length Limit   |
 | ----------------------------------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | -------------- |
-| func                                | String     | Notification type.  Data final state failure notification: daFailed,   data fetching original file notification: daUserAuthorized,Parsed file generation notification: daFileParsed,   index page data submission notification: daSubmittedApp                                | Y        |                |
+| func                                | String     | Notification type.  Data final state failure notification: daFailed,   data fetching original file notification: daUserAuthorized,Parsed file generation notification: daFileParsed,   index page data submission notification: daSubmittedApp                                  | Y        |                |
 | v                                   | String     | Version number, 2.0.0                                                                                                                                                                                                                                                           | Y        |                |
 | auth                                | Object     |                                                                                                                                                                                                                                                                                 | Y        |                |
 | auth.nonce                          | String     | Random number, 32-character random string (letters and numbers)                                                                                                                                                                                                                 | Y        | 32 characters  |
 | data                                | Object     |                                                                                                                                                                                                                                                                                 | Y        |                |
 | data.bizAppId                       | String     | System Integrator's appId                                                                                                                                                                                                                                                       | Y        |                |
-| data.daId                           | String     | data fetching ID                                                                                                                                                                                                                                                              | Y        |                |
+| data.daId                           | String     | data fetching ID                                                                                                                                                                                                                                                                | Y        |                |
 | data.bizNo                          | String     | System Integrator's transaction number (if entering directly from the trusted environment, this field is an empty string, such as the fullminiapp standalone mini program method)                                                                                               | Y        | 128 characters |
 | data.site                           | String     | data source accessed by the user:[site possible values](/en/access/appendix?id=_2-supported-data-types-site)                                                                                                                                                                       | Y        | 32 characters  |
 | **data.daStatus**             | Int        | User data collection status                                                                                                                                                                                                                                                     | N        |                |
-| **data.fileUrlList**          | Array      | URLs of the downloaded files, an array indicating that there may be multiple files (pdf, csv, or xls, etc.). If data fetching fails, the array is empty. data fetching original filenotification: for the original data. Parsed file notification: for the parsed file.       | N        |                |
+| **data.fileUrlList**          | Array      | URLs of the downloaded files, an array indicating that there may be multiple files (pdf, csv, or xls, etc.). If data fetching fails, the array is empty. data fetching original filenotification: for the original data. Parsed file notification: for the parsed file.         | N        |                |
 | **data.jsonResult**           | Int        | File parsing completion (10 - parsing successful, 12 - no user data (for Housing Fund, employment information, income declaration data sources), 13 - company name mismatch (for enterprise edition data sources))                                                              | N        |                |
 | **data.certResult**           | Int        | Evidence Certificate generation completion (No longer usable)                                                                                                                                                                                                                   | N        |                |
 | data.authorizedTs                   | Long       | User's authorization completion timestamp in milliseconds, a value of 0 indicates no authorization. Unauthorized users cannot pull user files from the System Integrator. Therefore, you can determine if authorizedTs > 0 to confirm the status is correct before downloading. | N        |                |
@@ -1264,7 +1261,6 @@ Whenever there is a change in the data fetching status, the System Integrator wi
 
 **Note:** The notification return fields are **not encrypted with aesKey**. The timing of the aesKey call is determined by the System Integrator, and the trusted environment data collection backend cannot store the old aesKey for each data collection. Therefore, all notification fields are unencrypted.
 Note 2: There is **no unzipPassword** in the return fields of the notification.
-
 
 #### 3.3.3 Output Parameters
 
@@ -1365,7 +1361,7 @@ Note 2: There is **no unzipPassword** in the return fields of the notification.
 8. The fileKey and fileUrl in the notification are in plain text and are not encrypted, and can be downloaded directly using the method described in the next section "Return Value Download Example."
 9. The validity period of the file URL in the notification is only 5 minutes, so please handle the file download asynchronously immediately after receiving to avoid the URL expiring and causing a download failure. Otherwise, the system integrator needs to call 3.5 (original file), and 3.11 (parsed json) again to retrieve the download URL and fileKey; at this time, the obtained download URL and fileKey are encrypted and need to be decrypted first using the method in 3.5.1 before downloading.
 
-### 3.4 Downloading Files
+### 3.4 Download Notification Files
 
 This section provides a code example on how to download using the encrypted fileKey and fileUrl returned from the notification interface.
 
