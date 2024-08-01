@@ -42,18 +42,18 @@ Note: For asynchronous download data sources, a notification with daStatus = 10 
 * **Notes:**
   * daStatus = -4 represents the status value pulled when the user has not yet clicked "Agree" on the pre-loading page, which is an intermediate state.
   * The range of daStatus values for final state failures: [13,100], that is, greater than or equal to 13 and less than or equal to 100.
-  * The data format downloaded from the data type may be pdf/xls/csv/txt, etc.
-  * **For the same user (idno) from the same integrator (appId), on the same** **calendar day** **(counted by the time the start-vdi** **request is initiated**), obtaining the same data type (site), only the first valid operation is charged. Other repeated data collection operations for the same site, whether valid or not, are not charged.
+  * The data format downloaded from the data source may be pdf/xls/csv/txt, etc.
+  * **For the same user (idno) from the same integrator (appId), on the same** **calendar day** **(counted by the time the start-vdi** **request is initiated**), obtaining the same data source (site), only the first valid operation is charged. Other repeated data collection operations for the same site, whether valid or not, are not charged.
 
 ## 4. jsonResult Values
 
-| Value        | Other                                                                                      |
-| :----------- | :----------------------------------------------------------------------------------------- |
-| 5            | Initial state of parsing; if daStatus = 10, it indicates parsing failure                   |
-| **10** | **Final state of successful parsing**                                                |
-| 11           | Final state where no parsing is required                                                   |
-| 12           | No user data after file parsing                                                            |
-| 13           | The company name parsed for the enterprise version data type does not match the input name |
+| Value        | Other                                                                                        |
+| :----------- | :------------------------------------------------------------------------------------------- |
+| 5            | Initial state of parsing; if daStatus = 10, it indicates parsing failure                     |
+| **10** | **Final state of successful parsing**                                                  |
+| 11           | Final state where no parsing is required                                                     |
+| 12           | No user data after file parsing                                                              |
+| 13           | The company name parsed for the enterprise version data source does not match the input name |
 
 ## 5. daSubStatus Values
 
@@ -111,17 +111,16 @@ void testDownloadUsingPresignedUrl() throws Exception{
 
 * Before going live, ensure that at least one full process (from a real entry point, completing Data Acquisition, receiving notifications, pulling files, and completing the business) has been tested successfully.
 * Confirm that the production environment public key has been provided, the callback address remains unchanged, and all outbound IPs have been provided. Any changes must be notified at least 2 days in advance.
+
   * If possible, please provide the https certificate for the callback address, as our operations require it for security verification. If the https certificate for the callback address server was ignored in the test environment, please ensure to provide it.
 * Confirm that the relevant IPs and domain names of the System Provider have been added to the whitelist.
 * Confirm that the correct format of the System End-User agreement has been uploaded, and urge the product and Tech Support to verify. Agreement handling requirements:
-  1. When the System End-User selects the corresponding data type (site in the interface), use the corresponding agreement template to sign (we provide the template, only the Chinese name of the data type changes according to the site, everything else remains the same), in PDF format. The content to be replaced is in green (replaced twice throughout), the site and the corresponding Chinese names are listed in Appendix 2 above.
+
+  1. When the System End-User selects the corresponding data source (site in the interface), use the corresponding agreement template to sign (we provide the template, only the Chinese name of the data source changes according to the site, everything else remains the same), in PDF format. The content to be replaced is in green (replaced twice throughout), the site and the corresponding Chinese names are listed in Appendix 2 above.
   2. Dynamically write the current user's name and ID number (in plaintext) at the beginning of the document.
   3. At the end of the document, use CA signature (invoke the electronic signature given to the end-user by the System Integrator), and add the date.
   4. After signing, upload the signed PDF file through interface 3.4 each time it is invoked.
-     * Note: The agreement can be reused; the dimension is the user’s ID number (idNo in the interface) + data type (site in the interface).
-     * Example: Zhang San has acquired data type A, the agreement can be signed once, but each time Zhang San submits A, this agreement must be transmitted through the interface.
+     * Note: The agreement can be reused; the dimension is the user's ID number (idNo in the interface) + data source (site in the interface).
+     * Example: Zhang San has acquired data source A, the agreement can be signed once, but each time Zhang San submits A, this agreement must be transmitted through the interface.
   5. The agreement needs to be transmitted before the end-user operation is completed to ensure timely notification and timely pulling of Data Acquisition files.
-
-2. If using H5 for integration
-
-* Confirm the entry page and Success Page of the production environment again.
+  6. Confirm the Failure page and Success Page of the production environment again, and make sure that these two pages are production-ready and can be accessed.
