@@ -6,10 +6,12 @@ Only "h5" is supported.
 
 Note: For asynchronous download data sources, a notification with daStatus = 10 will only be issued after all files have been successfully downloaded.
 
-| site                 | Official Name                     | Description                   | accessway | File count & format | Data source type (PC/App) |
-| :------------------- | :-------------------------------- | :---------------------------- | :-------- | :------------------ | :------------------------ |
-| chrome-chiyubank-jyj | Chiyu banking transaction records | Chiyu Bank Website            | h5        | csv: 1 (zip)        | PC                        |
-| chrome-govhk-tax     | Tax payment e-receipt (HK)        | Hongkong Personal Tax Website | h5        | pdf: 1 (zip)        | PC                        |
+| Country/Region | site                 | Official Name           | Description      | accessway | File count & format | Data source type (PC/App) |
+| :----- | :------------------- | :-------------------------------- | :---------------------------- | :-------- | :------------  | :------------------------ |
+| Hong Kong SAR, China  | chrome-chiyubank-jyj | Chiyu banking transaction records | Chiyu Bank Website            | h5    | csv: 1 (zip)  | PC       |
+| Hong Kong SAR, China  | chrome-govhk-tax     | Tax payment e-receipt (HK)        | Hongkong Personal Tax Website | h5    | pdf: 1 (zip) | PC         |
+| Indonesia    | chrome-shopee-data     | Shopee e-commerce data        | The data on Shopee includes: <br/> 1.Personal Profile <br/> 2.Address <br/> 3.Payment Information <br/> 4.Shopee Coins <br/>5.Order Details | h5    | html: 5 (zip) | PC         |
+| Indonesia    | chrome-bpjs-data     | BPJS data          | BPJS Data Includes: <br/> 1.KARTU DIGITAL <br/> 2.Saldo JHT <br/> 3.Detail Saldo JHT | h5    | html: 3 (zip) | PC         |
 
 ## daStatus Values
 
