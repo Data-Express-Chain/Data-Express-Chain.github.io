@@ -446,8 +446,8 @@ FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 |arg.site|String|用户访问的数据类型：[支持的数据类型](/zh/access/appendix?id=_2-支持的数据类型)|Y|32|
 |arg.bizNo|String|业务流水号。建议设计统一规则如进件渠道等，方便后续扩展|Y|60|
 |arg.openId|String|接入方中用户的身份标识，用于定位本次取数使用的用户<br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|128|
-|arg.idNo|String|用户的ID。**接入方需要首先对用户ID进行合法性验证，对不符合用户ID码格式和位数的请求予以拒绝。**<br><br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
-|arg.userName|String|用户做完接入方KYC的真实姓名，会在我方页面显示。*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
+|arg.idNo|String|用户身份唯一标识，可以和openid用相同字段，但是一定要和真实用户身份一一对应（不同用户传入相同idNo，会影响取数）<br><br>*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
+|arg.userName|String|用户姓名，会经过不可逆的哈希后进行存储，以便后续定位问题*注意：接入方需要对此字段使用aesKey进行加密，然后进行Base64编码。*|Y|    |
 |arg.userClaim|String|用户申明的那一段文字<br>*注意：业务方根据实际核身的方式填写文字*|Y|128个字符（byte）<br>注意不是128个汉字字符|
 |arg.ua|String|用户终端设备的user agent，目的是尽量模拟用户真实的手机环境，可以从前端webview属性获取。如果无法获取到，可以传固定值。|Y|    |
 |arg.width|Unsigned int|终端屏幕宽度（期望的用户可视区域的宽度），必须为整数|Y|    |
