@@ -156,7 +156,7 @@ public class DecsHashTool {
 
 ### 2.1 更新AES加密秘钥接口  
 #### 2.1.1 接口说明 
-接入方在调用清洁环境的相关接口时（或接收通知时），为了保护用户的敏感信息（用户协议、用户姓名、用户身份证号码、用户取数文件的URL）不泄露，需要对这些敏感信息用AES算法进行加密。为了保证加解密秘钥的安全，建议接入方定期和清洁环境服务提供方一起，定期调用此接口更新AES加密的秘钥（后面简称为aesKey）。  
+接入方在调用清洁环境的相关接口时（或接收通知时），为了保护用户的敏感信息（用户姓名、用户身份证号码、用户取数文件的URL）不泄露，需要对这些敏感信息用AES算法进行加密。为了保证加解密秘钥的安全，建议接入方定期和清洁环境服务提供方一起，定期调用此接口更新AES加密的秘钥（后面简称为aesKey）。  
 
 **注意**：
 
@@ -280,7 +280,7 @@ NodeJs:
 AES加解密，需要使用aes-128-ecb，作为默认cipher
 
 
-### 2.2 用户协议上传接口
+<!--### 2.2 用户协议上传接口
 #### 2.2.1 接口说明  
 
 接入方在进入清洁环境正式使用之前，需要提示用户与清洁环境服务提供方签署一份用户协议，完成后上传。  
@@ -409,7 +409,7 @@ byte[] decodedBytes = cipher.doFinal(encyptedBytes);
 String downloadFileSavePath = "D:\\save.pdf";
 FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 ```
-
+-->
 
 ### 2.3 开始取数接口
 
