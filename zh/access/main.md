@@ -457,6 +457,8 @@ FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), decodedBytes);
 |arg.ext.attach|String|附加数据，如果传值，则会在后端通知数据的ext里带上此字段|N|128个字符（byte），注意不是128个汉字字符|
 |arg.ext.urlattach|String|回跳URL附加字段。用于在返回接入方前端回跳页面时，附带额外参数。在接入方start-vdi传入，在h5取数完成后，从我方授权页面回跳到接入方h5页面时，url会携带此参数：key为attach_url，value为这里传入的值。|N|12个字符|
 |arg.ext.childSites|String[]|当arg.site为N合一时，childSites数组需要填写|N|    |
+|arg.ext.lang|String|印尼客户需要传入此项，前端会根据此参数确认页面对应的语言：en，对应英文；id，对应印尼语；zh，对应中文|N|    |
+
 
 * 请求参数示例  
 
