@@ -22,8 +22,12 @@ accessWay的可能取值
 | :----------- | :------------------- | :---------------------------------- | :----------- | :----------- | :------------------- | :----- |
 | 中国香港 | chrome-chiyubank-jyj | 集友银行流水                                 | 集友银行网页 | H5           | csv: 1 (zip)                                | PC网页 |
 | 中国香港 | chrome-govhk-tax     | 电子缴税凭证（香港地区）                 | 香港个税网页 | H5           | pdf: 1(zip)                  | PC网页 |
-| 印度尼西亚 | app-shopee-info    | 虾皮网数据              | 虾皮网上的数据，包含：<br/> 1、个人资料 <br/> 2、地址 <br/> 3、支付信息 <br/> 4、虾皮积分 <br/> 5、订单信息 |    H5     |  xml: 5~N (zip)                  | Shopee APP |
-| 印度尼西亚 | chrome-bpjs-data       | 印尼社保数据       | 印尼社保数据，包含：<br/> 1、电子卡片信息 <br/> 2、针对工资收入者的雇主信息 <br/> 3、社保详情数据   | H5            |  html: 3 (zip)            | PC网页 |
+| 印度尼西亚 | app-shopee-info    | 虾皮网数据              | 虾皮网上的数据，包含：<br/> 1、个人资料 <br/> 2、地址 <br/> 3、支付信息 <br/> 4、虾皮积分 <br/> 5、订单信息 |    H5     |  xml: 5~N (zip) 或者 html：5～N（zip)                 | Shopee APP 或者 Shopee PC 网站 |
+| 印度尼西亚 | hwapp-tokopedia-info       | Tokopedia数据       | Tokopedia 的数据，包含：<br/> 1、个人资料 <br/> 2、地址 <br/> 3、支付信息 <br/>  4、订单信息   | H5            |  html: 4 (zip) 或者 xml: 4~N (zip)          | PC网页 或者 Tokopdedia APP |
+| 印度尼西亚 | hwapp-bpjs-ynsb       | 印尼社保数据       | 印尼社保数据，包含：<br/> 1、电子卡片信息 <br/> 2、社保详情数据   | APP         |  xml: 2 (zip)            | JMO APP |
+| 印度尼西亚 | chrome-djp-data       | 印尼个税数据       | 印尼个税数据，包含：<br/> 1、用户个人信息 <br/> 2、缴纳税款信息 <br/> 3、税务申报信息   | H5            |  html: 3 (zip)            | PC网页 |
+| 印度尼西亚 | hwapp-dana-info      | Dana 交易数据       | Dana 交易数据，包含：<br/> 1、用户个人信息 <br/> 2、交易记录详情  | H5            |  html: 2～N (zip) 或者 PDF：1～3（zip）            | Dana APP |
+
 ## 3. daStatus
 
 | 状态名称                             | daStatus     | 描述                                                                                                                                 | 终态？                                 | 是否通知接入方                         | 是否有效操作 | 模式          |
