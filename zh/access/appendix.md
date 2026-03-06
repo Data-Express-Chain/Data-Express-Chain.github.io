@@ -118,9 +118,9 @@ void testDownloadUsingPresignedUrl() throws Exception{
         String base64Md5 = Base64Encoder.encode(md5Bytes);
         URL url = new URL(presignedUrl);
         HttpURLConnection httpURLConnection = (HttpURLConnection)url.openConnection();
-        httpURLConnection.setRequestProperty("x-cos-server-side-encryption-customer-algorithm", "AES256");
-        httpURLConnection.setRequestProperty("x-cos-server-side-encryption-customer-key-MD5", base64Md5);
-        httpURLConnection.setRequestProperty("x-cos-server-side-encryption-customer-key", fileKey);
+        httpURLConnection.setRequestProperty("x-amz-server-side-encryption-customer-algorithm", "AES256");
+        httpURLConnection.setRequestProperty("x-amz-server-side-encryption-customer-key-MD5", base64Md5);
+        httpURLConnection.setRequestProperty("x-amz-server-side-encryption-customer-key", fileKey);
         byte[] fileBytes = IOUtils.toByteArray(httpURLConnection.getInputStream());
         FileUtils.writeByteArrayToFile(new File(downloadFileSavePath), fileBytes);
 }
