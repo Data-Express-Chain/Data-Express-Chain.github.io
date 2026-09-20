@@ -133,22 +133,19 @@ void testDownloadUsingPresignedUrl() throws Exception{
    * 确认生产环境公钥已提供、回调地址不改变、以及所有的出网IP已提供，如有变化，必须提前2天告知
      * 如果方便的话，麻烦提供回调地址的https证书，我们运维要求需要进行安全校验；如果之前测试环境忽略过回调地址服务端的https证书，请务必提供
    * 确认已经添加清洁环境后台的相关IP和域名到白名单
-   * **如果使用本地化部署解析，请参考下面配置Webhook方式及时接收解析工程代码变动**
-  <!--  * 确认已经上传正确格式的用户协议，并敦促产品和对接技术同学验证。协议处理要求：
-     1. 用户选择提交对应的数据类型（接口中的site）时，要使用对应的协议模板签署（我们提供模版，仅数据类型中文名称根据site变化，其他一致），且为pdf格式，需要替换的内容为绿色部分（全文替换2处），site与中文填写的对应关系见上文附录2。
-     2. 在文初姓名、身份证的地方对应动态写入当前用户的姓名、身份证号码（明文）
-     3. 文末用CA签名（调用接入方给C端用户的的电子签），并且加上日期
-     4. 签署好之后，每次调用把签署好的PDF文件通过3.4接口上传。
-        * 备注：协议可复用，维度是用户身份证号（接口中的idNo） + 数据类型（接口中的site）
-        * 举例：张三取了A数据类型，协议可以签署一份，但是张三每次提交A的时候，这一份协议都要调用接口传送。
-     5. 协议需要在用户操作完成之前传过来，这样确保可以及时收到通知和及时拉取取数文件 -->
-
-<!-- 2. 如果使用小程序方式接入
-    * 确认生产环境使用的小程序ID、原始ID，且envVersion需改为release
-    * 如使用H5跳转小程序链接方式接入，需确认已知悉链接过期时间
-
-3. 如果使用SDK方式接入
-    * 确认SDK包的隐私政策、权限申请符合要求 -->
+   * **如果使用本地化部署解析，请参考下面第三节描述及时接收解析工程代码变动**
 
 2. 如果使用H5方式接入
    * 再次确认生产环境的入口页和结果页
+
+3. 接收解析工程代码变动方式一览
+   * **（推荐）使用GitHub内置的邮件通知机制**，指引详见：https://docs.github.com/en/subscriptions-and-notifications/get-started/configuring-notifications
+     * 根据指引，添加解析工程到您的Watching list：https://github.com/Data-Express-Chain/file-parse-demo
+     * 在通知配置里，配置您的接收通知的邮箱地址
+   * **（推荐）使用GitHub WebHook**，指引详见：https://docs.github.com/en/webhooks/about-webhooks
+     * 中文指引可参考：https://zhuanlan.zhihu.com/p/689236908
+     * 接入方需要提供一个可以接收POST的API URL
+     * 接入方将此API URL告知我方，我方在解析工程中添加此URL，并配置commit更新
+   * 自行实现轮询查询机制
+     * 定期CURL https://api.github.com/repos/Data-Express-Chain/file-parse-demo
+     * 读取并维护返回体的```updated_at```字段，当比对此日期发生变化时，自行登录GitHub进入仓库查看更新情况
